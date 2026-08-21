@@ -2,7 +2,7 @@
 
 > 3D打印耗材全生命周期管理系统 - 专业版
 >
-> 从耗材入库、使用追踪、余量校准到补货提醒，一站式管理你的3D打印耗材。配合「丝衡」智能称重节点，实现物理重量与账面数据实时同步。
+> 从耗材入库、使用追踪、余量校准到补货提醒，一站式管理你的3D打印耗材。配合「丝衡」智能电子秤，实现物理重量与账面数据实时同步。
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-green.svg)
@@ -92,7 +92,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                      硬件层                                   │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │          丝衡 - ESP32-S3 智能称重节点                 │   │
+│  │          丝衡 - ESP32-S3 智能电子秤                 │   │
 │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐      │   │
 │  │  │ HX711  │ │ OLED   │ │ PN532  │ │ WS2812 │      │   │
 │  │  │ 称重    │ │ 显示屏  │ │ NFC    │ │ RGB灯  │      │   │
@@ -190,7 +190,7 @@ SERVER_HOST=0.0.0.0
 SERVER_PORT=8000
 ```
 
-### 智能称重节点配置
+### 智能电子秤配置
 
 ESP32 固件采用 WiFiManager 配网，无需硬编码配置：
 
@@ -288,9 +288,9 @@ ESP32 固件采用 WiFiManager 配网，无需硬编码配置：
 
 ---
 
-## ⚖️ 丝衡 - 智能称重节点
+## ⚖️ 丝衡 - 智能电子秤
 
-本项目配套的 ESP32-S3 智能称重节点固件，独立仓库：
+本项目配套的 ESP32-S3 智能电子秤固件，独立仓库：
 
 **项目地址**：https://github.com/fabie250/siheng
 
@@ -471,7 +471,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 - **作者**：fabie
 - **项目地址**：https://github.com/你的用户名/bambu-filament-managerPro
-- **配套固件**：https://github.com/fabie250/siheng（丝衡 - 智能称重节点）
+- **配套固件**：https://github.com/fabie250/siheng（丝衡 - 智能电子秤）
 - **问题反馈**：[提交 Issue](https://github.com/你的用户名/bambu-filament-managerPro/issues)
 
 ---
