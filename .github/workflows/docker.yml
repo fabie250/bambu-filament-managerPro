@@ -24,18 +24,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
+
+- name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/fabie250/bambu-filament-managerpro
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v6
+      - name: Build and Push
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/fabie250/bambu-filament-managerpro:latest
+            ghcr.io/fabie250/bambu-filament-managerpro:${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
