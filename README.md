@@ -14,6 +14,8 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
 ---
+## 全新页面 加入电子秤模块
+<img width="1147" height="810" alt="image" src="https://github.com/user-attachments/assets/b1a58ad3-8cf4-4b1b-bdbf-796a0a3f05fe" />
 
 ## ✨ 功能特性
 
