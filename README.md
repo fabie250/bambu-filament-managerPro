@@ -15,439 +15,542 @@
 ## ✨ 功能特性
 
 ### 📦 耗材管理
-- **耗材台账**：品牌、型号、颜色、材质、重量、价格、购买链接全记录
-- **NFC 绑定**：PN532 读取耗材盘 NFC UID，一键绑定耗材信息
-- **多仓管理**：支持 AMS 多仓位耗材管理，实时同步仓位状态
-- **使用记录**：每次打印自动扣减耗材，记录使用历史
+
+* **耗材台账**：品牌、型号、颜色、材质、重量、价格、购买链接全记录
+* **NFC 绑定**：PN532 读取耗材盘 NFC UID，一键绑定耗材信息
+* **多仓管理**：支持 AMS 多仓位耗材管理，实时同步仓位状态
+* **使用记录**：每次打印自动扣减耗材，记录使用历史
 
 ### 📊 数据洞察
-- **耗材统计**：按品牌、材质、颜色统计使用量和剩余量
-- **成本分析**：打印成本核算，耗材花费趋势图
-- **损耗追踪**：打印失败废料记录，对账校准流水
-- **补货提醒**：低库存自动提醒，一键生成补货清单
+
+* **耗材统计**：按品牌、材质、颜色统计使用量和剩余量
+* **成本分析**：打印成本核算，耗材花费趋势图
+* **损耗追踪**：打印失败废料记录，对账校准流水
+* **补货提醒**：低库存自动提醒，一键生成补货清单
 
 ### ⚖️ 智能称重（丝衡节点）
-- **实时称重**：HX711 + 悬臂梁传感器，精度 0.1g
-- **自动校准**：放上去自动识别耗材，对比账面与实测重量
-- **两种模式**：
-  - 全新耗材模式：称总重，自动扣减空盘皮重
-  - 老耗材校准模式：称剩余重量，校准账面数据
-- **失败纠正**：打印失败后一键扣减废料，记录损耗
+
+* **实时称重**：HX711 + 悬臂梁传感器，精度 0.1g
+* **自动校准**：放上去自动识别耗材，对比账面与实测重量
+* **两种模式**：
+
+  * 全新耗材模式：称总重，自动扣减空盘皮重
+  * 老耗材校准模式：称剩余重量，校准账面数据
+* **失败纠正**：打印失败后一键扣减废料，记录损耗
 
 ### 📡 远程设备管理
-- **ESP32 节点管理**：心跳上报，在线状态实时显示
-- **远程屏幕预览**：网页端/客户端实时查看 ESP32 OLED 屏幕内容
-- **远程页面切换**：称重页 / 设备信息页 / WiFi 状态页，一键切换
-- **远程重启**：网页端一键重启设备
-- **初始化重置配网**：远程清除 WiFi 和 API Key 配置，重新配网
+
+* **ESP32 节点管理**：心跳上报，在线状态实时显示
+* **远程屏幕预览**：网页端/客户端实时查看 ESP32 OLED 屏幕内容
+* **远程页面切换**：称重页 / 设备信息页 / WiFi 状态页，一键切换
+* **远程重启**：网页端一键重启设备
+* **初始化重置配网**：远程清除 WiFi 和 API Key 配置，重新配网
 
 ### 🔄 OTA 在线升级
-- **固件管理**：网页端上传固件，自动解析版本号
-- **自动检查更新**：ESP32 启动时自动检查新版本
-- **GitHub 镜像加速**：多镜像轮询，解决国内下载慢问题
-- **MD5 校验**：固件下载后自动校验完整性
+
+* **固件管理**：网页端上传固件，自动解析版本号
+* **自动检查更新**：ESP32 启动时自动检查新版本
+* **GitHub 镜像加速**：多镜像轮询，解决国内下载慢问题
+* **MD5 校验**：固件下载后自动校验完整性
 
 ### 🔐 安全与权限
-- **用户系统**：注册登录，JWT 鉴权
-- **API Key 管理**：脚本/设备接入用 API Key，支持生成和禁用
-- **数据隔离**：多用户数据隔离，每人只能看自己的耗材
-- **HTTPS 支持**：生产环境建议配置 HTTPS
+
+* **用户系统**：注册登录，JWT 鉴权
+* **API Key 管理**：脚本/设备接入用 API Key，支持生成和禁用
+* **数据隔离**：多用户数据隔离，每人只能看自己的耗材
+* **HTTPS 支持**：生产环境建议配置 HTTPS
 
 ---
 
 ## 🏗️ 系统架构
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
-│                        用户层                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │  Windows 客户端 │  │   网页端      │  │   手机浏览器      │  │
-│  │  (CustomTkinter)│  │  (原生HTML/JS)│  │  (响应式网页)    │  │
-│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │
-└─────────┼───────────────────┼─────────────────────┼────────────┘
-          │                   │                     │
-          └───────────────────┼─────────────────────┘
-                              │ HTTP/HTTPS
-                              ▼
+│                         用户层                              │
+│                                                             │
+│  ┌────────────────┐  ┌────────────────┐  ┌──────────────┐  │
+│  │ Windows 客户端 │  │    网页端       │  │   手机浏览器  │  │
+│  │      EXE       │  │   HTML / JS    │  │  响应式网页   │  │
+│  └───────┬────────┘  └───────┬────────┘  └──────┬───────┘  │
+└──────────┼────────────────────┼───────────────────┼─────────┘
+           │                    │                   │
+           └────────────────────┼───────────────────┘
+                                │ HTTP / HTTPS
+                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                       服务端层                                │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              FastAPI 后端服务                          │   │
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │   │
-│  │  │ 耗材管理  │ │ 设备管理  │ │ 称重管理  │ │ OTA管理 │ │   │
-│  │  └──────────┘ └──────────┘ └──────────┘ └────────┘ │   │
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐            │   │
-│  │  │ 用户鉴权  │ │ API Key  │ │ 统计分析  │            │   │
-│  │  └──────────┘ └──────────┘ └──────────┘            │   │
-│  └──────────────────────────────────────────────────────┘   │
-│         │              │              │                       │
-│         ▼              ▼              ▼                       │
-│  ┌──────────┐   ┌──────────┐  ┌──────────┐                 │
-│  │  MySQL   │   │ SQLite   │  │ 固件存储  │                 │
-│  │ (Linux)  │   │(Windows) │  │ (本地/OSS)│                 │
-│  └──────────┘   └──────────┘  └──────────┘                 │
+│                         服务端层                             │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │                 FastAPI 后端服务                       │ │
+│  │                                                       │ │
+│  │  耗材管理 │ 设备管理 │ 称重管理 │ OTA │ 用户 │ API Key │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│      SQLite（Windows） / MySQL（Linux） / 固件存储          │
 └─────────────────────────────────────────────────────────────┘
-                              │ HTTP
-                              ▼
+                                │
+                                │ HTTP
+                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      硬件层                                   │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │          丝衡 - ESP32-S3 智能电子秤                 │   │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐      │   │
-│  │  │ HX711  │ │ OLED   │ │ PN532  │ │ WS2812 │      │   │
-│  │  │ 称重    │ │ 显示屏  │ │ NFC    │ │ RGB灯  │      │   │
-│  │  └────────┘ └────────┘ └────────┘ └────────┘      │   │
-│  └──────────────────────────────────────────────────────┘   │
+│                         硬件层                              │
+│                                                             │
+│             丝衡 - ESP32-S3 智能电子秤                      │
+│                                                             │
+│       HX711 │ OLED │ PN532 │ WS2812 │ WiFi                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🚀 快速开始
+# 🚀 快速开始
+
+## ⭐ 普通 Windows 用户
+
+**不需要安装 Python，也不需要配置开发环境。**
+
+如果你只是想使用本项目，直接下载 GitHub Releases 中提供的 Windows 版本即可。
+
+Windows 版本包含：
+
+* **Windows 服务端 EXE**
+* **Windows 客户端 EXE**
+
+推荐安装/使用顺序：
+
+```text
+① 下载 Windows 服务端
+        ↓
+② 启动服务端 EXE
+        ↓
+③ 浏览器访问服务端地址
+        ↓
+④ 注册/登录账号
+        ↓
+⑤ 下载并启动 Windows 客户端 EXE
+        ↓
+⑥ 在客户端填写服务端地址
+        ↓
+⑦ 开始管理 3D 打印耗材
+```
+
+> ⚠️ Windows 服务端和客户端是两个独立程序。
+>
+> 服务端负责数据库、API、耗材管理以及 ESP32 设备通信。
+>
+> 客户端负责提供 Windows 桌面操作界面。
+
+---
+
+# 🪟 Windows 服务端
+
+## 方式一：直接使用 EXE（推荐）
+
+Windows 用户无需安装 Python。
+
+从 GitHub Releases 下载最新的 Windows 服务端压缩包。
+
+例如：
+
+```text
+BambuFilamentManagerPro-Server-Windows-x64.zip
+```
+
+解压后：
+
+```text
+BambuFilamentManagerPro-Server/
+├── BambuFilamentManagerPro-Server.exe
+├── data/
+├── firmware/
+├── config/
+└── README.txt
+```
+
+双击：
+
+```text
+BambuFilamentManagerPro-Server.exe
+```
+
+启动服务端。
+
+默认情况下服务端监听：
+
+```text
+http://127.0.0.1:8000
+```
+
+浏览器访问：
+
+```text
+http://127.0.0.1:8000
+```
+
+API 文档：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### 局域网访问
+
+如果需要让手机、其他电脑或者 ESP32 访问这台 Windows 电脑：
+
+```text
+http://你的电脑局域网IP:8000
+```
+
+例如：
+
+```text
+http://192.168.1.100:8000
+```
+
+如果无法访问，请检查 Windows 防火墙是否允许 `8000` 端口。
+
+---
+
+## Windows 服务端数据
+
+Windows 版本默认使用 SQLite，因此：
+
+**不需要安装 MySQL。**
+
+程序运行后数据库和相关数据会保存在服务端程序的数据目录中。
+
+建议不要删除：
+
+```text
+data/
+```
+
+否则可能导致耗材、用户和设备数据丢失。
+
+---
+
+# 🖥️ Windows 客户端
+
+## 方式一：直接使用 EXE（推荐）
+
+普通用户不需要安装 Python。
+
+从 GitHub Releases 下载：
+
+```text
+BambuFilamentManagerPro-Client-Windows-x64.zip
+```
+
+解压后：
+
+```text
+BambuFilamentManagerPro-Client/
+├── BambuFilamentManagerPro-Client.exe
+├── config/
+└── README.txt
+```
+
+双击：
+
+```text
+BambuFilamentManagerPro-Client.exe
+```
+
+即可启动 Windows 客户端。
+
+---
+
+## 🔗 首次连接服务端
+
+客户端首次启动后，需要填写服务端地址。
+
+如果服务端和客户端在同一台电脑：
+
+```text
+http://127.0.0.1:8000
+```
+
+如果服务端运行在另一台电脑：
+
+```text
+http://192.168.1.100:8000
+```
+
+填写完成后连接服务端。
+
+之后即可使用：
+
+* 耗材台账
+* 智能称重
+* 数据统计
+* ESP32 管理
+* OTA 固件管理
+* API Key 管理
+* 补货清单
+
+等功能。
+
+---
+
+# 🔧 Windows 开发者模式
+
+如果你是开发者，或者需要修改源码，可以直接使用 Python 源码运行。
 
 ### 环境要求
 
-- **Python**：3.8 或更高版本
-- **操作系统**：Windows 10/11 或 Linux（Ubuntu 20.04+ / Debian 11+）
-- **数据库**：
-  - Linux：MySQL 8.0+（推荐）
-  - Windows：SQLite（内置，无需额外安装）
-- **硬件**（可选）：ESP32-S3 开发板 + HX711 + OLED + PN532
+* Python 3.8+
+* Windows 10/11
 
-### Linux 部署（Docker 推荐）
+### 服务端
 
 ```bash
-# 克隆仓库
-git clone https://github.com/你的用户名/bambu-filament-managerPro.git
-cd bambu-filament-managerPro
-
-# 配置数据库
-cp .env.example .env
-# 编辑 .env，填写 MySQL 连接信息
-
-# 构建并启动
-docker-compose up -d
-
-# 访问
-# 网页端：http://localhost:8000
-# API 文档：http://localhost:8000/docs
-```
-
-### Linux 部署（手动）
-
-```bash
-# 安装依赖
 pip install -r requirements.txt
-
-# 初始化数据库
-python -c "from main import Base, engine; Base.metadata.create_all(bind=engine)"
-
-# 启动服务
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-### Windows 部署
-
-```bash
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动服务（自动使用 SQLite）
 python server3.1.0.py
 ```
 
-### Windows 客户端
+### 客户端
 
 ```bash
-# 安装依赖
 pip install customtkinter requests Pillow
-
-# 运行客户端
 python BambuFilamentStudio_v3.1.0.py
 ```
 
+> 普通用户无需执行以上步骤。
+>
+> **直接使用 Releases 中提供的 EXE 即可。**
+
 ---
 
-## ⚙️ 配置说明
+# 🐧 Linux 部署
 
-### 环境变量（.env）
+Linux 用户可以使用 Docker 或 Python 源码部署。
+
+## Docker 部署
+
+```bash
+git clone https://github.com/fabie250/bambu-filament-managerPro.git
+cd bambu-filament-managerPro
+
+cp .env.example .env
+
+docker-compose up -d
+```
+
+启动后访问：
+
+```text
+http://服务器IP:8000
+```
+
+API 文档：
+
+```text
+http://服务器IP:8000/docs
+```
+
+## 手动部署
+
+```bash
+pip install -r requirements.txt
+
+python -c "from main import Base, engine; Base.metadata.create_all(bind=engine)"
+
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Linux 推荐使用 MySQL。
+
+---
+
+# ⚙️ 服务端配置
+
+## Windows
+
+Windows EXE 版本默认使用：
+
+```text
+SQLite
+```
+
+无需安装 MySQL。
+
+## Linux
+
+Linux 推荐使用：
+
+```text
+MySQL 8.0+
+```
+
+环境变量示例：
 
 ```env
-# 数据库配置（Linux MySQL）
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=filament_db
 
-# JWT 配置
 SECRET_KEY=your-secret-key-change-this
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# 服务配置
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8000
 ```
 
-### 智能电子秤配置
+---
 
-ESP32 固件采用 WiFiManager 配网，无需硬编码配置：
+# ⚖️ 丝衡 - 智能电子秤
 
-1. 首次开机自动进入配网模式，OLED 显示热点名
-2. 手机连接热点 `Siheng_Scale_XXXX`
-3. 浏览器访问 `192.168.4.1`
-4. 填写 WiFi 密码、服务器地址、API Key
-5. 保存后自动重启连接
+本项目配套 ESP32-S3 智能电子秤：
+
+https://github.com/fabie250/siheng
+
+丝衡节点负责：
+
+* HX711 精准称重
+* NFC 耗材识别
+* OLED 显示
+* WiFi 通信
+* 称重数据上报
+* 心跳上报
+* 远程指令
+* OTA 固件升级
 
 ---
 
-## 📱 功能模块详解
+# 📡 Windows EXE 与丝衡连接
 
-### 1. 耗材台账
+推荐网络结构：
 
-- 录入耗材信息：品牌、材质、颜色、初始重量、当前重量、空盘皮重、价格
-- NFC UID 绑定：扫描耗材盘 NFC，自动关联
-- 搜索筛选：按品牌、材质、颜色、剩余量筛选
-- 批量操作：批量导入导出、批量调整重量
-
-### 2. 设备管理（AMS）
-
-- 打印机管理：添加打印机，记录型号、IP地址
-- AMS 仓位管理：多仓位耗材实时状态
-- 打印记录：每次打印自动记录使用的耗材和用量
-- 远程控制：（待开发）连接 Bambu Studio API 远程控制
-
-### 3. 数据洞察
-
-- 耗材使用趋势：按日/周/月统计使用量
-- 成本分析：单卷耗材成本、单次打印成本
-- 损耗统计：打印失败率、废料总量
-- 库存预警：低于阈值自动提醒补货
-
-### 4. 补货清单
-
-- 自动生成：低库存耗材自动加入补货清单
-- 购买链接：一键跳转购买页面
-- 价格对比：记录历史价格，提醒涨价
-- 采购统计：月度/季度采购花费
-
-### 5. 智能称重工作台
-
-- 实时称重：放上耗材自动识别，显示实测重量
-- 账面对比：并排显示系统理论剩余 vs 秤端实测剩余
-- 误差标注：负数标红（少了），正数标绿（多了）
-- 三种操作：
-  - 🔴 打印失败纠正：记录废料，覆盖重量
-  - 🔵 常规误差同步：日常累积误差校准
-  - 🟢 新料盘/重置皮重：新耗材入库，录入空盘重量
-
-### 6. ESP 管理
-
-- 设备列表：所有在线设备状态一览
-- 屏幕预览：实时显示 ESP32 OLED 画面
-- 页面切换：远程切换称重/设备信息/WiFi状态页面
-- 远程重启：一键重启设备
-- 重置配网：远程清除配置，重新进入配网模式
-- 固件管理：上传固件，发布 OTA 更新
-- 升级日志：查看 OTA 升级进度和结果
-
-### 7. API 密钥
-
-- 生成 API Key：用于脚本和设备接入
-- 密钥管理：查看、禁用、删除 API Key
-- 权限控制：每个 API Key 关联对应用户
-- 使用日志：（待开发）API 调用记录
-
----
-
-## 🔌 API 文档
-
-启动服务后访问 `http://localhost:8000/docs` 查看完整的 Swagger API 文档。
-
-### 主要接口
-
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/auth/register` | POST | 用户注册 |
-| `/api/auth/login` | POST | 用户登录 |
-| `/api/auth/api-keys` | POST | 生成 API Key |
-| `/api/filaments` | GET | 获取耗材列表 |
-| `/api/filaments` | POST | 添加耗材 |
-| `/api/filaments/{id}` | PUT | 更新耗材 |
-| `/api/filaments/{id}` | DELETE | 删除耗材 |
-| `/api/scale/report` | POST | ESP32 称重数据上报 |
-| `/api/scale/status` | GET | 获取待确认称重记录 |
-| `/api/scale/correct` | POST | 确认/纠正称重数据 |
-| `/api/scale/heartbeat` | POST | 设备心跳上报 |
-| `/api/scale/device/status` | GET | 获取设备状态 |
-| `/api/scale/device/command` | POST | 下发远程指令 |
-| `/api/scale/device/pending_command` | GET | 获取待执行指令 |
-| `/api/scale/ota_check` | POST | 检查固件更新 |
-| `/api/ingest/script-filaments` | GET | 脚本同步耗材数据 |
-
----
-
-## ⚖️ 丝衡 - 智能电子秤
-
-本项目配套的 ESP32-S3 智能电子秤固件，独立仓库：
-
-**项目地址**：https://github.com/fabie250/siheng
-
-### 硬件清单
-
-| 组件 | 型号 | 说明 |
-|------|------|------|
-| 主控 | ESP32-S3-Zero | 4MB Flash + 2MB PSRAM |
-| 称重 | HX711 + 悬臂梁传感器 | 5kg 量程，精度 0.1g |
-| 显示 | OLED 1.3寸 SH1106 | 128x64，I2C，黄蓝双色 |
-| NFC | PN532 | I2C 接口，读取耗材 NFC UID |
-| 电源 | 锂电池 3.7V + TP4056 | 充电保护一体板 |
-
-### 引脚定义
-
-| ESP32-S3 | 外设 | 说明 |
-|-----------|------|------|
-| GPIO 8 | OLED SDA | I2C 数据 |
-| GPIO 9 | OLED SCL | I2C 时钟 |
-| GPIO 10 | HX711 DT | 称重数据 |
-| GPIO 11 | HX711 SCK | 称重时钟 |
-| GPIO 21 | WS2812 | RGB 状态灯 |
-
-### 固件功能
-
-- WiFi 智能配网（WiFiManager）
-- HTTP POST 称重数据上报
-- 30秒心跳 + 10秒指令轮询
-- OTA 在线升级（GitHub 镜像加速）
-- 远程页面切换（称重/设备信息/WiFi状态）
-- 远程重启和重置配网
-- Deep Sleep 低功耗模式
-- OLED 全中文显示，WiFi 信号格数
-
----
-
-## 📸 截图
-
-（待补充）
-
-- 耗材台账页面
-- 智能称重工作台
-- 数据洞察图表
-- ESP 管理页面
-- Windows 客户端界面
-- 丝衡节点实物图
-
----
-
-## 🛠️ 开发说明
-
-### 项目结构
-
+```text
+                 ┌──────────────────────┐
+                 │   Windows 服务端 EXE │
+                 │      :8000           │
+                 └──────────┬───────────┘
+                            │
+                ┌───────────┼───────────┐
+                │           │           │
+                ▼           ▼           ▼
+        Windows客户端     手机浏览器    丝衡ESP32
+            EXE
 ```
+
+只要这些设备处于可以互相访问的网络中即可。
+
+例如 Windows 电脑 IP：
+
+```text
+192.168.1.100
+```
+
+服务端：
+
+```text
+http://192.168.1.100:8000
+```
+
+那么：
+
+* Windows 客户端连接 `http://192.168.1.100:8000`
+* 手机浏览器访问 `http://192.168.1.100:8000`
+* 丝衡 ESP32 配置服务器地址为 `http://192.168.1.100:8000`
+
+---
+
+# 📦 GitHub Releases
+
+建议每个版本发布时提供：
+
+```text
+BambuFilamentManagerPro/
+│
+├── Windows/
+│   ├── BambuFilamentManagerPro-Server-Windows-x64.zip
+│   └── BambuFilamentManagerPro-Client-Windows-x64.zip
+│
+├── Linux/
+│   └── Docker部署文件
+│
+└── Source/
+    └── Source code.zip
+```
+
+Windows 用户只需要下载：
+
+```text
+Server-Windows-x64.zip
+Client-Windows-x64.zip
+```
+
+不需要下载 Python 源码，也不需要安装 Python。
+
+---
+
+# 📁 项目结构
+
+```text
 bambu-filament-managerPro/
+│
 ├── server/
-│   ├── main.py                  # Linux 服务端（MySQL）
-│   ├── server3.1.0.py          # Windows 服务端（SQLite）
-│   ├── requirements.txt         # Python 依赖
-│   └── Dockerfile               # Docker 构建文件
+│   ├── main.py
+│   ├── server3.1.0.py
+│   ├── requirements.txt
+│   └── Dockerfile
+│
 ├── client/
-│   └── BambuFilamentStudio_v3.1.0.py  # Windows CTk 客户端
+│   └── BambuFilamentStudio_v3.1.0.py
+│
 ├── web/
-│   └── index.html               # 前端网页（单文件）
+│   └── index.html
+│
+├── build/
+│   ├── windows-server/
+│   │   └── BambuFilamentManagerPro-Server.exe
+│   │
+│   └── windows-client/
+│       └── BambuFilamentManagerPro-Client.exe
+│
 ├── docs/
-│   ├── API.md                   # API 文档
-│   ├── DEPLOY.md                # 部署指南
-│   └── HARDWARE.md              # 硬件接线指南
-├── .env.example                 # 环境变量示例
-├── docker-compose.yml           # Docker Compose 配置
-├── CHANGELOG.md                 # 更新日志
-├── LICENSE                      # GPLv3 协议
-└── README.md                    # 项目说明
+│   ├── API.md
+│   ├── DEPLOY.md
+│   └── HARDWARE.md
+│
+├── .env.example
+├── docker-compose.yml
+├── CHANGELOG.md
+├── LICENSE
+└── README.md
 ```
 
-### 开发环境搭建
-
-```bash
-# 克隆仓库
-git clone https://github.com/你的用户名/bambu-filament-managerPro.git
-cd bambu-filament-managerPro
-
-# 创建虚拟环境
-python -m venv venv
-source venv/bin/activate  # Linux
-# venv\Scripts\activate   # Windows
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动开发服务
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### 代码规范
-
-- Python：遵循 PEP 8，使用 black 格式化
-- 前端：原生 HTML/CSS/JS，不依赖框架
-- 注释：关键函数必须有中文注释
-- 提交信息：使用中文，格式如 `[模块] 说明`
+> `build/` 中的 EXE 可以不直接提交到 Git 仓库。
+>
+> 推荐通过 GitHub Releases 发布 Windows EXE。
 
 ---
 
-## 📄 更新日志
+# 🔄 版本更新
 
-详见 [CHANGELOG.md](CHANGELOG.md)。
+项目同时提供：
 
-### [3.1.0] - 2026-08-22
+* Windows 服务端 EXE 更新
+* Windows 客户端 EXE 更新
+* Web 端更新
+* 丝衡 ESP32 固件 OTA 更新
 
-#### 新增
-- 🎉 Pro 版本首次发布
-- ⚖️ 智能称重工作台（账面对比、误差标注、三种纠正模式）
-- 📡 ESP32 远程设备管理（心跳、屏幕预览、页面切换、远程重启）
-- 🔧 远程初始化重置配网
-- 🔄 OTA 在线升级（固件管理、GitHub 镜像加速、MD5校验）
-- 📇 NFC 耗材绑定（PN532 支持）
-- 📊 对账校准流水（损耗追踪）
-- 🔐 API Key 管理（脚本/设备接入）
-- 📱 响应式网页端（手机适配）
+Windows 用户只需要下载最新 Release 即可。
 
-#### 优化
-- 从 bambu-filament-manager 升级，协议改为 GPLv3
-- 数据库结构优化，支持多用户数据隔离
-- 称重算法优化，增加滤波和校准功能
+如果使用旧版本服务端，请优先升级服务端，再升级客户端。
 
 ---
 
-## 🤝 贡献
+# 📜 许可证
 
-欢迎提交 Issue 和 Pull Request！
+本项目采用 **GNU General Public License v3.0（GPLv3）** 协议开源。
 
-### 贡献流程
-
-1. Fork 本仓库
-2. 创建特性分支：`git checkout -b feature/AmazingFeature`
-3. 提交更改：`git commit -m '[模块] 添加某个功能'`
-4. 推送分支：`git push origin feature/AmazingFeature`
-5. 提交 Pull Request
-
-### 开发计划
-
-- [ ] Bambu Studio API 集成，自动同步打印记录
-- [ ] 多用户协作，团队共享耗材库
-- [ ] 移动端 App（Flutter）
-- [ ] 耗材价格爬虫，自动比价
-- [ ] 打印质量分析，关联耗材与打印成功率
-- [ ] 更多品牌 AMS 支持
-
----
-
-## 📜 许可证
-
-本项目采用 **GNU General Public License v3.0** 协议开源。
-
-```
+```text
 Bambu Filament Manager Pro - 3D打印耗材全生命周期管理系统
-Copyright (C) 2026  fabie
+Copyright (C) 2026 fabie
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -456,34 +559,34 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 ```
 
-详见 [LICENSE](LICENSE) 文件。
+详见 [`LICENSE`](LICENSE) 文件。
 
 ---
 
-## 📮 联系方式
+# 📮 联系方式
 
-- **作者**：fabie
-- **项目地址**：https://github.com/你的用户名/bambu-filament-managerPro
-- **配套固件**：https://github.com/fabie250/siheng（丝衡 - 智能电子秤）
-- **问题反馈**：[提交 Issue](https://github.com/你的用户名/bambu-filament-managerPro/issues)
+* **作者**：fabie
+* **项目地址**：https://github.com/fabie250/bambu-filament-managerPro
+* **配套固件**：https://github.com/fabie250/siheng
+* **问题反馈**：GitHub Issues
 
 ---
 
-## 🙏 致谢
+# 🙏 致谢
 
-- [FastAPI](https://fastapi.tiangolo.com/) - 高性能 Python Web 框架
-- [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) - 现代化 Python GUI 库
-- [U8g2](https://github.com/olikraus/u8g2) - ESP32 OLED 显示库
-- [HX711](https://github.com/bogde/HX711) - 称重传感器库
-- [WiFiManager](https://github.com/tzapu/WiFiManager) - ESP32 智能配网库
-- [Bambu Lab](https://bambulab.com/) - 优秀的3D打印设备
+* FastAPI
+* CustomTkinter
+* U8g2
+* HX711
+* WiFiManager
+* Bambu Lab
 
 ---
 
