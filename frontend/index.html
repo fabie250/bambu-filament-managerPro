@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>拓竹耗材与打印机管理系统 / Filament Manager v3.1.0</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f0f2f5; color: #1f2937; padding: 12px; }
+        .container { max-width: 1160px; margin: 0 auto; background: #ffffff; padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .header h2 { font-size: 20px; color: #111827; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        
+        /* 移动端横向平滑滚动导航 */
+        .nav-tabs { display: flex; gap: 6px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px; padding-bottom: 8px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .nav-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: transparent; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; color: #6b7280; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+        .tab-btn:hover { background: #f3f4f6; color: #111827; }
+        .tab-btn.active { background: #10b981; color: #ffffff; }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #374151; }
+        input, select { width: 100%; height: 38px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+        input:focus, select:focus { border-color: #10b981; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        
+        .btn { border: none; height: 36px; padding: 0 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; display: inline-flex; align-items: center; justify-content: center; transition: opacity 0.15s; user-select: none; }
+        .btn:active { opacity: 0.8; }
+        .btn-primary { background: #10b981; color: #ffffff; }
+        .btn-secondary { background: #4b5563; color: #ffffff; }
+        .btn-blue { background: #2563eb; color: #ffffff; }
+        .btn-purple { background: #8b5cf6; color: #ffffff; }
+        .btn-amber { background: #f59e0b; color: #ffffff; }
+        .btn-danger { background: #ef4444; color: #ffffff; }
+        
+        .alert-msg { margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px; display: none; }
+        .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; display: block; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block; }
+        
+        .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .hidden { display: none !important; }
+        
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; background: #fff; border-radius: 6px; overflow: hidden; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+        th { background: #f3f4f6; font-weight: 600; color: #374151; white-space: nowrap; }
+        
+        .color-badge { display: inline-block; width: 13px; height: 13px; border-radius: 50%; vertical-align: middle; margin-right: 5px; border: 1px solid #ccc; }
+        .code-box { background: #1e293b; color: #38bdf8; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; word-break: break-all; margin-top: 8px; }
+        .badge-warning { background: #fee2e2; color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 4px; }
+        
+        /* 统计网格 */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; border-left: 4px solid #10b981; }
+        .stat-title { font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 4px; }
+        .stat-value { font-size: 20px; font-weight: 700; color: #111827; }
+
+        /* 模态框 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; justify-content: center; align-items: center; padding: 10px; }
+        .modal-content { background: #ffffff; width: 840px; max-width: 100%; max-height: 90vh; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .modal-body { overflow-y: auto; margin-top: 12px; flex: 1; }
+        .close-btn { font-size: 24px; cursor: pointer; color: #6b7280; font-weight: bold; line-height: 1; padding: 0 4px; }
+
+        /* 打印机 AMS 槽位自适应 */
+        .ams-slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+        /* ====== 手机端特化媒体查询 (<= 768px) ====== */
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .container { padding: 14px; border-radius: 8px; }
+            .header h2 { font-size: 17px; }
+            .header { margin-bottom: 12px; padding-bottom: 10px; }
+            
+            .form-row { grid-template-columns: 1fr; gap: 8px; }
+            .stat-grid { grid-template-columns: 1fr; gap: 8px; }
+            .ams-slots-grid { grid-template-columns: repeat(2, 1fr); }
+
+            /* 数据大屏两列转单列 */
+            .analytics-split { grid-template-columns: 1fr !important; }
+
+            /* 移动端模态弹窗满屏 */
+            .modal-content { max-height: 94vh; padding: 16px; }
+
+            /* 表格在移动端以清晰紧凑卡片呈现 */
+            .table-mobile-cards thead { display: none; }
+            .table-mobile-cards tbody, 
+            .table-mobile-cards tr, 
+            .table-mobile-cards td { display: block; width: 100%; }
+            .table-mobile-cards tr { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+            .table-mobile-cards td { border-bottom: 1px dashed #f1f5f9; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+            .table-mobile-cards td:last-child { border-bottom: none; padding-top: 8px; justify-content: flex-end; gap: 6px; }
+            .table-mobile-cards td::before { content: attr(data-label); font-weight: 600; color: #64748b; font-size: 12px; }
+            .table-mobile-cards td:last-child::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>✨ 拓竹耗材台账 <span style="font-size: 11px; background: #10b981; color: #fff; padding: 2px 6px; border-radius: 10px;">v3.1.0</span></h2>
+        <div id="userHeaderBox" class="hidden" style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: space-between;">
+            <span style="font-size: 13px; font-weight: 600;">用户：<strong id="currentUser" style="color: #2563eb;"></strong></span>
+            <button class="btn btn-secondary" onclick="logout()" style="height: 30px; padding: 0 10px; font-size: 12px;">退出登录</button>
+        </div>
+    </div>
+
+    <!-- 1. 登录注册模块 -->
+    <div id="authSection">
+        <div class="card" style="max-width: 480px; margin: 20px auto;">
+            <h3 style="margin-bottom: 12px;">账号登录与注册</h3>
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button class="btn btn-primary" onclick="handleLogin()" style="flex: 1;">登录系统</button>
+                <button class="btn btn-secondary" onclick="handleRegister()" style="flex: 1;">注册新账号</button>
+            </div>
+            <div id="authMsg" class="alert-msg"></div>
+        </div>
+    </div>
+
+    <!-- 2. 主控制台 -->
+    <div id="mainSection" class="hidden">
+        <!-- 导航选项卡 -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">📦 耗材台账</button>
+            <button class="tab-btn" onclick="switchTab('printers')">🖨️ 设备管理 (AMS)</button>
+            <button class="tab-btn" onclick="switchTab('analytics')">📊 数据洞察</button>
+            <button class="tab-btn" onclick="switchTab('shopping')">🛒 补货清单</button>
+            <button class="tab-btn" onclick="switchTab('esp')">📡 ESP 管理</button>
+            <button class="tab-btn" onclick="switchTab('apikeys')">🔑 API 密钥</button>
+        </div>
+
+        <!-- 视图 1: 耗材台账 -->
+        <div id="tab_dashboard">
+            <div class="card">
+                <h3>➕ 新增耗材档案 (支持批量录入)</h3>
+                <div class="form-row" style="margin-top: 12px;">
+                    <div class="form-group">
+                        <label>品牌</label>
+                        <input type="text" id="f_brand" value="Bambu Lab">
+                    </div>
+                    <div class="form-group">
+                        <label>材质</label>
+                        <input type="text" id="f_material" placeholder="如 PLA / PETG">
+                    </div>
+                    <div class="form-group">
+                        <label>颜色名称与 HEX</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="f_color_name" placeholder="如 基础绿">
+                            <input type="color" id="f_color_hex" value="#00AE42" style="width: 48px; padding: 2px; height: 38px; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>初始重量 (克/g)</label>
+                        <input type="number" id="f_weight" value="1000" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label>购买单价 (元)</label>
+                        <input type="number" id="f_price" value="99" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label>批量入库数量 (卷)</label>
+                        <input type="number" id="f_count" value="1" min="1" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>购买链接 (选填)</label>
+                    <input type="text" id="f_purchase_url" placeholder="粘贴购买商品链接 (如 淘宝/拼多多)">
+                </div>
+                <button class="btn btn-primary" onclick="addFilament()" style="width: 100%; margin-top: 4px; height: 40px;">保存耗材入库</button>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h3>在册耗材清单</h3>
+                    <button class="btn btn-blue" onclick="loadFilaments()" style="height: 30px; font-size: 12px; padding: 0 10px;">🔄 刷新列表</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>品牌</th>
+                                <th>材质</th>
+                                <th>颜色</th>
+                                <th>剩余存量 / 价值</th>
+                                <th>买入原价</th>
+                                <th>购买链接</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filamentTableBody">
+                            <tr><td colspan="8" style="text-align: center; color: #9ca3af;">暂无数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视图 2: 设备管理 (虚拟 AMS) -->
+        <div id="tab_printers" class="hidden">
+            <div class="card">
+                <h3>➕ 添加 3D 打印机设备</h3>
+                <div class="form-row" style="margin-top: 12px;">
+                    <div class="form-group">
+                        <label>打印机名称</label>
+                        <input type="text" id="p_name" placeholder="例如: 1号机-X1C">
+                    </div>
+                    <div class="form-group">
+                        <label>机型</label>
+                        <select id="p_model">
+                            <option value="Bambu X1-Carbon">Bambu X1-Carbon</option>
+                            <option value="Bambu P1S">Bambu P1S</option>
+                            <option value="Bambu P1P">Bambu P1P</option>
+                            <option value="Bambu A1">Bambu A1</option>
+                            <option value="Bambu A1 mini">Bambu A1 mini</option>
+                            <option value="Other">其他打印机</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-primary" onclick="addPrinter()" style="width: 100%; height: 38px;">确认添加设备</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3>🖨️ 设备与虚拟 AMS 映射</h3>
+                    <button class="btn btn-blue" onclick="loadPrinters()" style="height: 30px; font-size: 12px; padding: 0 10px;">🔄 刷新设备</button>
+                </div>
+                <div id="printersListContainer">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 视图 3: 数据洞察 -->
+        <div id="tab_analytics" class="hidden">
+            <div class="stat-grid" id="analyticsSummary">
+                <div class="stat-card">
+                    <div class="stat-title">累计打印消耗总重</div>
+                    <div class="stat-value" id="statTotalWeight">0.0 g</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #f59e0b;">
+                    <div class="stat-title">消耗折算总金额</div>
+                    <div class="stat-value" id="statTotalCost">¥ 0.00</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #2563eb;">
+                    <div class="stat-title">总计扣减/打印任务</div>
+                    <div class="stat-value" id="statTaskCount">0 次</div>
+                </div>
+            </div>
+
+            <div class="analytics-split" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="card">
+                    <h3>🖨️ 各机位产出与消耗占比</h3>
+                    <div class="table-responsive">
+                        <table style="margin-top: 8px;">
+                            <thead>
+                                <tr>
+                                    <th>设备名称</th>
+                                    <th>消耗克重</th>
+                                    <th>折算成本</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statPrintersBody">
+                                <tr><td colspan="3" style="text-align: center; color: #9ca3af;">暂无记录</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🧵 热门耗材材质排行</h3>
+                    <div class="table-responsive">
+                        <table style="margin-top: 8px;">
+                            <thead>
+                                <tr>
+                                    <th>耗材材质</th>
+                                    <th>消耗总量</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statMaterialsBody">
+                                <tr><td colspan="2" style="text-align: center; color: #9ca3af;">暂无记录</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视图 4: 补货清单 -->
+        <div id="tab_shopping" class="hidden">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <h3>🛒 待补货清单 (存量 &lt; 200g)</h3>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-primary" onclick="copyShoppingListText()" style="height: 32px; font-size: 12px; padding: 0 10px;">📋 复制采购单</button>
+                        <button class="btn btn-blue" onclick="exportShoppingJson()" style="height: 32px; font-size: 12px; padding: 0 10px;">📤 导出 JSON</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>耗材品名</th>
+                                <th>当前剩余</th>
+                                <th>购买链接</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shoppingTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: #9ca3af;">暂无缺料耗材</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视图 5: ESP 管理 -->
+        <div id="tab_esp" class="hidden">
+            <!-- ESP32 设备状态 + 在线更新 -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <h3>📡 ESP32 称重节点状态</h3>
+                    <button class="btn btn-blue" onclick="loadEspDeviceInfo()" style="height: 30px; font-size: 12px; padding: 0 10px;">🔄 刷新状态</button>
+                </div>
+                <div id="espDeviceBox" class="code-box" style="margin-bottom: 14px;">加载中...</div>
+
+                <!-- 模拟OLED实时屏幕 -->
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 14px;">
+                    <div style="flex: 0 0 auto;">
+                        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 6px; text-align: center;">📺 设备屏幕实时预览</div>
+                        <div id="oledScreen" style="width: 256px; height: 128px; background: #000; border: 3px solid #333; border-radius: 8px; padding: 6px; box-sizing: border-box; font-family: monospace; position: relative; overflow: hidden;">
+                            <div style="color: #666; font-size: 10px; text-align: center; line-height: 110px;">等待设备上线...</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 6px;">🔄 远程切换页面</div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <button class="btn btn-primary" onclick="switchDevicePage('weighing')" style="height: 34px; font-size: 12px;">⚖️ 称重页面</button>
+                            <button class="btn btn-blue" onclick="switchDevicePage('device_info')" style="height: 34px; font-size: 12px;">📱 设备信息</button>
+                            <button class="btn btn-amber" onclick="switchDevicePage('wifi_config')" style="height: 34px; font-size: 12px;">📶 WiFi状态</button>
+                            <button class="btn btn-secondary" onclick="rebootDevice()" style="height: 34px; font-size: 12px; margin-top: 8px;">🔄 重启设备</button>
+                            <button class="btn btn-danger" onclick="resetDeviceConfig()" style="height: 34px; font-size: 12px; margin-top: 4px;">🔧 初始化重置配网</button>
+                        </div>
+                        <div id="deviceCmdStatus" style="font-size: 11px; color: #6b7280; margin-top: 8px;"></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="checkForUpdate()" style="flex: 1; min-width: 140px; height: 38px;">🔍 检查更新</button>
+                    <button id="btnTriggerOta" class="btn btn-amber" onclick="triggerOtaUpdate()" style="flex: 1; min-width: 140px; height: 38px;" disabled>⬆️ 立即更新</button>
+                </div>
+                <div id="otaUpdateLog" class="code-box hidden" style="margin-top: 12px; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- 固件上传管理 -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <h3>📡 ESP32 称重节点固件管理</h3>
+                    <button class="btn btn-blue" onclick="loadFirmwareInfo()" style="height: 30px; font-size: 12px; padding: 0 10px;">🔄 刷新</button>
+                </div>
+                <div id="firmwareInfoBox" class="code-box" style="margin-bottom: 14px;">加载中...</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>固件版本号 <span style="color:#9ca3af; font-weight:normal;">(选填，不填自动从文件名解析)</span></label>
+                        <input type="text" id="esp_fw_version" placeholder="例如: 1.0.1，留空自动解析">
+                    </div>
+                    <div class="form-group">
+                        <label>选择固件文件 (.bin)</label>
+                        <input type="file" id="esp_fw_file" accept=".bin" style="height: 38px; padding: 6px;">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="uploadFirmware()" style="width: 100%; height: 40px; margin-top: 4px;">⬆️ 上传固件并发布更新</button>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">上传后，ESP32 下次启动/复位时会自动检测版本并 OTA 升级，无需接线。</p>
+            </div>
+
+            <!-- 称重工作台：账面对比 + 操作 -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <h3>⚖️ 称重工作台</h3>
+                    <button class="btn btn-blue" onclick="loadScaleWorkbench()" style="height: 30px; font-size: 12px; padding: 0 10px;">🔄 刷新</button>
+                </div>
+                <!-- 账面对比面板 -->
+                <div id="scaleCompareBox" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+                    <div style="text-align: center; color: #9ca3af; font-size: 14px;">等待秤端上报数据...</div>
+                </div>
+                <!-- 操作按钮组 -->
+                <div id="scaleActionBtns" style="display: none; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <button class="btn btn-danger" onclick="confirmScaleAction('failure_correction')" style="flex: 1; min-width: 140px; height: 40px;">🔴 打印失败纠正</button>
+                    <button class="btn btn-blue" onclick="confirmScaleAction('normal_sync')" style="flex: 1; min-width: 140px; height: 40px;">🔵 常规误差同步</button>
+                    <button class="btn btn-primary" onclick="newSpoolAction()" style="flex: 1; min-width: 140px; height: 40px;">🟢 新料盘/重置皮重</button>
+                </div>
+                <!-- 待确认列表 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="font-size: 14px;">📋 历史待确认记录</h4>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>设备</th>
+                                <th>NFC UID</th>
+                                <th>实测重量</th>
+                                <th>预期重量</th>
+                                <th>误差</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingScaleBody">
+                            <tr><td colspan="8" style="text-align: center; color: #9ca3af;">暂无待确认记录</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视图 6: API 密钥 -->
+        <div id="tab_apikeys" class="hidden">
+            <div class="card">
+                <h3>🔑 Windows 客户端 API 密钥</h3>
+                <p style="font-size: 13px; color: #6b7280; margin-top: 6px;">生成 API Key 填入客户端设置，或在客户端使用账号密码一键获取。</p>
+                <div style="margin-top: 14px;">
+                    <button class="btn btn-blue" onclick="generateApiKey()">生成/重置我的脚本 API Key</button>
+                </div>
+                <div id="apiKeyDisplay" class="code-box hidden">尚未生成 API Key</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 1: 手动调整克重 -->
+<div id="adjustModal" class="modal-overlay hidden">
+    <div class="modal-content" style="width: 460px;">
+        <div class="modal-header">
+            <h3>⚙️ 手动调整耗材存量</h3>
+            <span class="close-btn" onclick="closeAdjustModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="adj_filament_id">
+            <div class="form-group">
+                <label>调整类型</label>
+                <select id="adj_type">
+                    <option value="reduce">减少 (-)</option>
+                    <option value="add">增加 (+)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>变动克重 (g)</label>
+                <input type="number" id="adj_weight" placeholder="请输入数值 (如: 50)" inputmode="decimal">
+            </div>
+            <div class="form-group">
+                <label>模型名称 / 变动原因</label>
+                <input type="text" id="adj_reason" placeholder="例如: 手动样品、炒面废料、补充新卷">
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button class="btn btn-amber" style="flex: 1;" onclick="submitAdjustModal()">确认提交</button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeAdjustModal()">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 1.5: 绑定 NFC UID 到耗材 -->
+<div id="bindModal" class="modal-overlay hidden">
+    <div class="modal-content" style="width: 520px;">
+        <div class="modal-header">
+            <h3>🔗 绑定耗材到 NFC</h3>
+            <span class="close-btn" onclick="closeBindModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>NFC UID</label>
+                <input type="text" id="bind_nfc_uid" readonly style="background:#f3f4f6;">
+            </div>
+            <div class="form-group">
+                <label>绑定方式</label>
+                <select id="bind_mode_type" onchange="toggleBindMode()">
+                    <option value="existing">选择已有耗材</option>
+                    <option value="new">新增耗材</option>
+                </select>
+            </div>
+            <!-- 已有耗材 -->
+            <div id="bind_existing_section">
+                <div class="form-group">
+                    <label>选择耗材</label>
+                    <select id="bind_filament_select"></select>
+                </div>
+            </div>
+            <!-- 新增耗材 -->
+            <div id="bind_new_section" class="hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>品牌</label>
+                        <input type="text" id="bind_brand" value="Bambu Lab">
+                    </div>
+                    <div class="form-group">
+                        <label>材质</label>
+                        <input type="text" id="bind_material" value="PLA">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>颜色名称</label>
+                        <input type="text" id="bind_color_name" placeholder="如 基础绿">
+                    </div>
+                    <div class="form-group">
+                        <label>颜色</label>
+                        <input type="color" id="bind_color_hex" value="#00AE42" style="height:38px; padding:4px; cursor:pointer;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>初始料重 (g) <span style="color:#9ca3af; font-weight:normal;">一般 1000g</span></label>
+                    <input type="number" id="bind_initial_weight" value="1000" step="1">
+                </div>
+            </div>
+            <!-- 称重模式 -->
+            <div class="form-group" style="margin-top:12px;">
+                <label>称重模式</label>
+                <select id="bind_scale_mode" onchange="toggleScaleMode()">
+                    <option value="spool">已知空盘重量（直接输入皮重）</option>
+                    <option value="calibrate">未知空盘重量（称总重+料重自动算）</option>
+                </select>
+            </div>
+            <div id="bind_spool_section">
+                <div class="form-group">
+                    <label>空盘皮重 (g) <span style="color:#9ca3af; font-weight:normal;">第三方盘请自己称一下</span></label>
+                    <input type="number" id="bind_spool_weight" value="250" step="1">
+                </div>
+            </div>
+            <div id="bind_calibrate_section" class="hidden">
+                <div class="form-group">
+                    <label>当前总重 (g) <span style="color:#9ca3af; font-weight:normal;">盘+料，称一下输入</span></label>
+                    <input type="number" id="bind_total_weight" placeholder="例如 1250" step="1">
+                </div>
+                <div class="form-group">
+                    <label>当前料重 (g) <span style="color:#9ca3af; font-weight:normal;">这卷料还剩多少克</span></label>
+                    <input type="number" id="bind_material_weight" value="1000" step="1">
+                    <p style="font-size:11px; color:#9ca3af; margin-top:4px;">系统自动计算：空盘皮重 = 总重 - 料重（新盘老盘都能用）</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="submitBind()">确认绑定</button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeBindModal()">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 2: 查看历史消耗记录 -->
+<div id="logModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📜 耗材历史流水与快照</h3>
+            <span class="close-btn" onclick="closeLogs()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+                <table class="table-mobile-cards">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>任务说明</th>
+                            <th>变动重量</th>
+                            <th>损耗金额</th>
+                            <th>剩余存量</th>
+                            <th style="width: 80px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">                        <tr><td colspan="6" style="text-align: center; color: #9ca3af;">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 3: AMS 槽位映射配置 -->
+<div id="amsModal" class="modal-overlay hidden">
+    <div class="modal-content" style="width: 520px;">
+        <div class="modal-header">
+            <h3 id="amsModalTitle">⚙️ 虚拟 AMS 槽位映射</h3>
+            <span class="close-btn" onclick="closeAmsModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="ams_printer_id">
+            <div class="form-group">
+                <label>AMS 槽位 1 挂载耗材</label>
+                <select id="ams_slot_1"></select>
+            </div>
+            <div class="form-group">
+                <label>AMS 槽位 2 挂载耗材</label>
+                <select id="ams_slot_2"></select>
+            </div>
+            <div class="form-group">
+                <label>AMS 槽位 3 挂载耗材</label>
+                <select id="ams_slot_3"></select>
+            </div>
+            <div class="form-group">
+                <label>AMS 槽位 4 挂载耗材</label>
+                <select id="ams_slot_4"></select>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 14px; height: 40px;" onclick="submitAmsMapping()">保存 AMS 挂载配置</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = window.location.origin;
+    let globalFilaments = [];
+    let globalPrinters = [];
+
+    function switchTab(tabId) {
+        const tabs = ['dashboard', 'printers', 'analytics', 'shopping', 'esp', 'apikeys'];
+        tabs.forEach(t => {
+            document.getElementById(`tab_${t}`).classList.add('hidden');
+        });
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(`tab_${tabId}`).classList.remove('hidden');
+        event.target.classList.add('active');
+
+        if (tabId === 'dashboard') loadFilaments();
+        else if (tabId === 'printers') loadPrinters();
+        else if (tabId === 'analytics') loadAnalytics();
+        else if (tabId === 'shopping') loadShoppingList();
+        else if (tabId === 'esp') loadEspPage();
+    }
+
+    function showMsg(text, isError = false) {
+        const msgDiv = document.getElementById('authMsg');
+        msgDiv.innerText = typeof text === 'string' ? text : (text.detail || JSON.stringify(text));
+        msgDiv.className = isError ? 'alert-msg alert-error' : 'alert-msg alert-success';
+    }
+
+    async function handleRegister() {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        if (!u || !p) return showMsg("请输入用户名和密码", true);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/auth/register`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username: u, password: p})
+            });
+            const data = await res.json();
+            showMsg(res.ok ? "注册成功，请点击【登录系统】" : (data.detail || "注册失败"), !res.ok);
+        } catch (e) {
+            showMsg("网络错误，请检查服务器连接", true);
+        }
+    }
+
+    async function handleLogin() {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        if (!u || !p) return showMsg("请输入用户名和密码", true);
+
+        const formData = new URLSearchParams();
+        formData.append('username', u);
+        formData.append('password', p);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('username', u);
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('mainSection').classList.remove('hidden');
+                document.getElementById('userHeaderBox').classList.remove('hidden');
+                document.getElementById('currentUser').innerText = u;
+                loadFilaments();
+            } else {
+                showMsg(data.detail || "账号或密码错误", true);
+            }
+        } catch (e) {
+            showMsg("登录失败，请重试", true);
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        document.getElementById('mainSection').classList.add('hidden');
+        document.getElementById('userHeaderBox').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
+    }
+
+    async function generateApiKey() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_URL}/api/auth/api-keys`, {
+            method: 'POST',
+            headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+            body: JSON.stringify({key_name: "Web端生成的APIKey"})
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const box = document.getElementById('apiKeyDisplay');
+            box.innerText = "你的 API Key: " + data.api_key;
+            box.classList.remove('hidden');
+        }
+    }
+
+    // --- 耗材台账逻辑 ---
+    async function loadFilaments() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const res = await fetch(`${BASE_URL}/api/filaments?_t=${Date.now()}`, {
+            headers: {'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache'}
+        });
+        if (res.ok) {
+            globalFilaments = await res.json();
+            const tbody = document.getElementById('filamentTableBody');
+            
+            if (globalFilaments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #9ca3af;">暂无耗材档案</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = globalFilaments.map(item => {
+                const unitPrice = item.price / (item.initial_weight_g || 1000);
+                const val = (item.current_weight_g * unitPrice).toFixed(2);
+                const isLow = item.current_weight_g < 200;
+                const linkHtml = item.purchase_url ? `<a href="${item.purchase_url}" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:600;">🔗 打开购买</a>` : '<span style="color:#9ca3af;">无</span>';
+
+                return `
+                    <tr>
+                        <td data-label="ID"><strong>#${item.id}</strong></td>
+                        <td data-label="品牌">${item.brand}</td>
+                        <td data-label="材质"><strong>${item.material}</strong></td>
+                        <td data-label="颜色"><span class="color-badge" style="background-color: ${item.color_hex};"></span>${item.color_name}</td>
+                        <td data-label="剩余存量">
+                            ${isLow ? '<span class="badge-warning">告急</span>' : ''}
+                            <strong style="color: ${isLow ? '#ef4444' : '#10b981'};">${item.current_weight_g} g</strong>
+                            <span style="font-size:12px; color:#6b7280;">(¥${val})</span>
+                        </td>
+                        <td data-label="买入原价">¥ ${item.price}</td>
+                        <td data-label="购买链接">${linkHtml}</td>
+                        <td data-label="操作">
+                            <button class="btn btn-purple" style="height:28px; padding:0 8px; font-size:11px;" onclick="showLogs(${item.id})">明细</button>
+                            <button class="btn btn-amber" style="height:28px; padding:0 8px; font-size:11px;" onclick="openAdjustModal(${item.id})">调整</button>
+                            <button class="btn btn-danger" style="height:28px; padding:0 8px; font-size:11px;" onclick="deleteFilament(${item.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    async function addFilament() {
+        const token = localStorage.getItem('token');
+        const count = parseInt(document.getElementById('f_count').value) || 1;
+        const payload = {
+            brand: document.getElementById('f_brand').value.trim() || 'Bambu Lab',
+            material: document.getElementById('f_material').value.trim(),
+            color_name: document.getElementById('f_color_name').value.trim(),
+            color_hex: document.getElementById('f_color_hex').value,
+            initial_weight_g: parseFloat(document.getElementById('f_weight').value) || 1000.0,
+            current_weight_g: parseFloat(document.getElementById('f_weight').value) || 1000.0,
+            price: parseFloat(document.getElementById('f_price').value) || 99.0,
+            purchase_url: document.getElementById('f_purchase_url').value.trim()
+        };
+        if (!payload.material || !payload.color_name) return alert("请填写材质和颜色名称！");
+
+        if (count === 1) {
+            const res = await fetch(`${BASE_URL}/api/filaments`, {
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert("耗材录入成功！");
+                loadFilaments();
+            }
+        } else {
+            const batch = Array(count).fill(payload);
+            const res = await fetch(`${BASE_URL}/api/ingest/script-filaments-batch`, {
+                method: 'POST',
+                headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'},
+                body: JSON.stringify(batch)
+            });
+            if (res.ok) {
+                alert(`成功批量录入 ${count} 卷耗材档案！`);
+                loadFilaments();
+            }
+        }
+    }
+
+    async function getOrFetchApiKey() {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_URL}/api/auth/api-keys`, {
+            method: 'POST',
+            headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+            body: JSON.stringify({key_name: "WebAutoKey"})
+        });
+        if (res.ok) {
+            const d = await res.json();
+            return d.api_key;
+        }
+        return "";
+    }
+
+    function openAdjustModal(fid) {
+        document.getElementById('adj_filament_id').value = fid;
+        document.getElementById('adj_weight').value = '';
+        document.getElementById('adj_reason').value = '';
+        document.getElementById('adjustModal').classList.remove('hidden');
+    }
+
+    function closeAdjustModal() {
+        document.getElementById('adjustModal').classList.add('hidden');
+    }
+
+    async function submitAdjustModal() {
+        const fid = document.getElementById('adj_filament_id').value;
+        const adjType = document.getElementById('adj_type').value;
+        const w = parseFloat(document.getElementById('adj_weight').value);
+        const reason = document.getElementById('adj_reason').value.trim() || "手动调整";
+        if (isNaN(w) || w <= 0) return alert("请输入有效克重数值！");
+
+        const actualWeightChange = adjType === 'reduce' ? w : -w;
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_URL}/api/filaments/${fid}/adjust-weight`, {
+            method: 'POST',
+            headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+            body: JSON.stringify({adjust_weight_g: actualWeightChange, reason: reason})
+        });
+        if (res.ok) {
+            closeAdjustModal();
+            loadFilaments();
+        }
+    }
+
+    async function showLogs(filamentId) {
+        document.getElementById('logModal').classList.remove('hidden');
+        const token = localStorage.getItem('token');
+        const tbody = document.getElementById('logTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">加载中...</td></tr>';
+
+        const filament = globalFilaments.find(f => f.id === filamentId);
+        const unitPrice = filament ? (filament.price / (filament.initial_weight_g || 1000)) : 0;
+
+        const res = await fetch(`${BASE_URL}/api/filaments/${filamentId}/logs?_t=${Date.now()}`, {
+            headers: {'Authorization': 'Bearer ' + token, 'Cache-Control': 'no-cache'}
+        });
+        if (res.ok) {
+            const logs = await res.json();
+            if (logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#9ca3af;">暂无消耗记录</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = logs.map(log => {
+                const cost = (Math.abs(log.used_weight_g) * unitPrice).toFixed(2);
+                return `
+                    <tr>
+                        <td data-label="时间" style="font-size:12px; color:#6b7280;">${log.created_at}</td>
+                        <td data-label="任务说明">${log.task_name || '-'}</td>
+                        <td data-label="变动重量" style="font-weight:bold; color:${log.used_weight_g > 0 ? '#ef4444' : '#10b981'};">${log.used_weight_g > 0 ? '-' : '+'}${Math.abs(log.used_weight_g)} g</td>
+                        <td data-label="损耗金额">¥ ${cost}</td>
+                        <td data-label="剩余存量"><strong>${log.remaining_weight_g !== null ? log.remaining_weight_g + ' g' : '-'}</strong></td>
+                        <td data-label="操作">
+                            <button class="btn btn-danger" style="height:26px; padding:0 8px; font-size:11px;" onclick="deleteLogRecord(${log.id})">撤销</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    function closeLogs() {
+        document.getElementById('logModal').classList.add('hidden');
+    }
+
+    async function deleteLogRecord(recordId) {
+        if (!confirm("确定要撤销此条变动记录吗？服务端将恢复对应余量快照。")) return;
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BASE_URL}/api/usage-records/${recordId}`, {
+            method: 'DELETE',
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        if (res.ok) {
+            closeLogs();
+            loadFilaments();
+        }
+    }
+
+    async function deleteFilament(id) {
+        if(!confirm("确定彻底删除该耗材档案吗？")) return;
+        const token = localStorage.getItem('token');
+        await fetch(`${BASE_URL}/api/filaments/${id}`, {
+            method: 'DELETE',
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+        loadFilaments();
+    }
+
+    // --- 设备与虚拟 AMS 逻辑 ---
+    async function loadPrinters() {
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-printers`, {
+            headers: {'X-API-Key': apiKey}
+        });
+        if (res.ok) {
+            globalPrinters = await res.json();
+            const container = document.getElementById('printersListContainer');
+            if (globalPrinters.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:30px;">暂无打印机设备</div>';
+                return;
+            }
+
+            const fMap = {};
+            globalFilaments.forEach(f => { fMap[f.id] = f; });
+
+            container.innerHTML = globalPrinters.map(p => {
+                const slots = p.ams_slots || {};
+                let slotsHtml = '';
+                for (let i = 1; i <= 4; i++) {
+                    const fid = slots[String(i)];
+                    const f = fMap[fid];
+                    slotsHtml += `
+                        <div style="background:#fff; padding:8px 10px; border-radius:6px; border:1px solid #e5e7eb;">
+                            <div style="font-size:11px; color:#10b981; font-weight:bold;">槽位 ${i}</div>
+                            <div style="font-size:13px; font-weight:600; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f ? `${f.brand} ${f.material}` : '<span style="color:#9ca3af;">[未挂载]</span>'}</div>
+                            <div style="font-size:11px; color:#6b7280;">${f ? `${f.color_name} (${f.current_weight_g}g)` : '-'}</div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div style="background:#f3f4f6; border-radius:8px; padding:12px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                            <div>
+                                <strong style="font-size:15px;">🖨️ ${p.name}</strong>
+                                <span style="font-size:12px; color:#6b7280; margin-left:4px;">(${p.model || 'Bambu'})</span>
+                            </div>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-blue" style="height:28px; padding:0 10px; font-size:12px;" onclick="openAmsModal(${p.id})">⚙️ 映射 AMS</button>
+                                <button class="btn btn-danger" style="height:28px; padding:0 10px; font-size:12px;" onclick="deletePrinter(${p.id})">删除</button>
+                            </div>
+                        </div>
+                        <div class="ams-slots-grid">${slotsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    async function addPrinter() {
+        const name = document.getElementById('p_name').value.trim();
+        const model = document.getElementById('p_model').value;
+        if (!name) return alert("请输入打印机名称！");
+
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-printers`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({name: name, model: model})
+        });
+        if (res.ok) {
+            document.getElementById('p_name').value = '';
+            loadPrinters();
+        }
+    }
+
+    function openAmsModal(printerId) {
+        const p = globalPrinters.find(x => x.id === printerId);
+        if (!p) return;
+        document.getElementById('ams_printer_id').value = printerId;
+        document.getElementById('amsModalTitle').innerText = `⚙️ 映射 AMS 槽位 - ${p.name}`;
+
+        let opts = '<option value="">[ 未挂载耗材 ]</option>';
+        globalFilaments.forEach(f => {
+            opts += `<option value="${f.id}">#${f.id} - ${f.brand} ${f.material} [${f.color_name}] (剩${f.current_weight_g}g)</option>`;
+        });
+
+        const slots = p.ams_slots || {};
+        for (let i = 1; i <= 4; i++) {
+            const select = document.getElementById(`ams_slot_${i}`);
+            select.innerHTML = opts;
+            select.value = slots[String(i)] || "";
+        }
+        document.getElementById('amsModal').classList.remove('hidden');
+    }
+
+    function closeAmsModal() {
+        document.getElementById('amsModal').classList.add('hidden');
+    }
+
+    async function submitAmsMapping() {
+        const pid = document.getElementById('ams_printer_id').value;
+        const slots = {
+            "1": document.getElementById('ams_slot_1').value ? parseInt(document.getElementById('ams_slot_1').value) : null,
+            "2": document.getElementById('ams_slot_2').value ? parseInt(document.getElementById('ams_slot_2').value) : null,
+            "3": document.getElementById('ams_slot_3').value ? parseInt(document.getElementById('ams_slot_3').value) : null,
+            "4": document.getElementById('ams_slot_4').value ? parseInt(document.getElementById('ams_slot_4').value) : null
+        };
+
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-printers/${pid}/ams`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({ams_slots: slots})
+        });
+        if (res.ok) {
+            closeAmsModal();
+            loadPrinters();
+        }
+    }
+
+    async function deletePrinter(pid) {
+        if (!confirm("确定删除该打印机设备吗？")) return;
+        const apiKey = await getOrFetchApiKey();
+        await fetch(`${BASE_URL}/api/ingest/script-printers/${pid}`, {
+            method: 'DELETE',
+            headers: {'X-API-Key': apiKey}
+        });
+        loadPrinters();
+    }
+
+    // --- 数据洞察逻辑 ---
+    async function loadAnalytics() {
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-analytics`, {
+            headers: {'X-API-Key': apiKey}
+        });
+        if (res.ok) {
+            const data = await res.json();
+            document.getElementById('statTotalWeight').innerText = `${data.total_consumed_g.toFixed(1)} g`;
+            document.getElementById('statTotalCost').innerText = `¥ ${data.total_consumed_cost.toFixed(2)}`;
+            document.getElementById('statTaskCount').innerText = `${data.task_count} 次`;
+
+            const pBody = document.getElementById('statPrintersBody');
+            if (!data.printers_stat || data.printers_stat.length === 0) {
+                pBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#9ca3af;">暂无数据</td></tr>';
+            } else {
+                pBody.innerHTML = data.printers_stat.map(p => `
+                    <tr>
+                        <td><strong>${p.name}</strong></td>
+                        <td style="color:#10b981; font-weight:bold;">${p.consumed_g.toFixed(1)} g</td>
+                        <td>¥ ${p.cost.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            const mBody = document.getElementById('statMaterialsBody');
+            if (!data.materials_stat || data.materials_stat.length === 0) {
+                mBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#9ca3af;">暂无数据</td></tr>';
+            } else {
+                mBody.innerHTML = data.materials_stat.map(m => `
+                    <tr>
+                        <td><strong>${m.material}</strong></td>
+                        <td style="color:#2563eb; font-weight:bold;">${m.consumed_g.toFixed(1)} g</td>
+                    </tr>
+                `).join('');
+            }
+        }
+    }
+
+    // --- 补货清单逻辑 ---
+    function loadShoppingList() {
+        const tbody = document.getElementById('shoppingTableBody');
+        const lowList = globalFilaments.filter(f => f.current_weight_g < 200);
+
+        if (lowList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#10b981; font-weight:bold; padding:20px 0;">🎉 耗材库存充裕，暂无需要补货的耗材！</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = lowList.map(item => {
+            return `
+                <tr>
+                    <td data-label="ID"><strong>#${item.id}</strong></td>
+                    <td data-label="品名"><strong>${item.brand} ${item.material}</strong> [${item.color_name}]</td>
+                    <td data-label="剩余存量" style="color:#ef4444; font-weight:bold;">${item.current_weight_g} g</td>
+                    <td data-label="购买链接">
+                        <div style="display:flex; gap:4px; width:100%; max-width:320px;">
+                            <input type="text" id="shop_url_${item.id}" value="${item.purchase_url || ''}" placeholder="粘贴购买链接" style="height:32px; font-size:12px;">
+                            <button class="btn btn-primary" style="height:32px; padding:0 8px; font-size:11px;" onclick="saveSingleUrl(${item.id})">保存</button>
+                            <button class="btn btn-secondary" style="height:32px; padding:0 8px; font-size:11px; white-space:nowrap;" onclick="applySameUrl('${item.brand}', '${item.material}', ${item.id})">同款</button>
+                        </div>
+                    </td>
+                    <td data-label="操作">
+                        ${item.purchase_url ? `<a href="${item.purchase_url}" target="_blank" class="btn btn-blue" style="height:28px; padding:0 10px; font-size:12px; text-decoration:none;">去购买</a>` : '<span style="color:#9ca3af; font-size:12px;">未设链接</span>'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function saveSingleUrl(fid) {
+        const url = document.getElementById(`shop_url_${fid}`).value.trim();
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-filaments/${fid}/url`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({purchase_url: url})
+        });
+        if (res.ok) {
+            alert("链接已保存！");
+            await loadFilaments();
+            loadShoppingList();
+        }
+    }
+
+    async function applySameUrl(brand, material, fid) {
+        const url = document.getElementById(`shop_url_${fid}`).value.trim();
+        if (!url) return alert("请先填写链接！");
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-filaments/apply-url`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({brand: brand, material: material, purchase_url: url})
+        });
+        if (res.ok) {
+            alert("已成功批量应用至同款耗材！");
+            await loadFilaments();
+            loadShoppingList();
+        }
+    }
+
+    function copyShoppingListText() {
+        const lowList = globalFilaments.filter(f => f.current_weight_g < 200);
+        if (lowList.length === 0) return alert("当前无缺料耗材！");
+
+        const lines = [`🛒 【拓竹耗材补货采购单 - ${new Date().toISOString().split('T')[0]}】`];
+        lowList.forEach((f, idx) => {
+            const urlStr = f.purchase_url ? `\n   🔗 购买链接: ${f.purchase_url}` : '';
+            lines.push(`${idx + 1}. ${f.brand} ${f.material} [${f.color_name}] - 余量: ${f.current_weight_g}g (建议采购 1 卷)${urlStr}`);
+        });
+
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            alert("采购单文本已复制到剪贴板，可直接粘贴发送给微信好友/客服！");
+        });
+    }
+
+    function exportShoppingJson() {
+        const lowList = globalFilaments.filter(f => f.current_weight_g < 200);
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lowList, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `shopping_list_${Date.now()}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    // --- ESP 管理逻辑 ---
+    let espDeviceIp = "";
+    let espCurrentVersion = "";
+    let latestFirmwareUrl = "";
+    let latestFirmwareMd5 = "";
+    let latestFirmwareVersion = "";
+
+    function loadEspPage() {
+        loadEspDeviceInfo();
+        loadFirmwareInfo();
+        loadScaleWorkbench();
+    }
+
+    // --- 称重工作台：账面对比 + 操作 ---
+    let currentScalePending = null;
+
+    async function loadScaleWorkbench() {
+        const apiKey = await getOrFetchApiKey();
+        const compareBox = document.getElementById('scaleCompareBox');
+        const actionBtns = document.getElementById('scaleActionBtns');
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/status?_t=${Date.now()}`, {
+                headers: {'X-API-Key': apiKey}
+            });
+            if (!res.ok) {
+                compareBox.innerHTML = `<div style="text-align:center; color:#ef4444;">获取称重状态失败 (HTTP ${res.status})</div>`;
+                actionBtns.style.display = 'none';
+                loadPendingScale();
+                return;
+            }
+            const data = await res.json();
+            const items = data.items || [];
+            if (items.length === 0) {
+                currentScalePending = null;
+                compareBox.innerHTML = `<div style="text-align:center; color:#9ca3af; font-size:14px;">⚪ 秤休眠中 / 无待确认记录</div>`;
+                actionBtns.style.display = 'none';
+            } else {
+                const item = items[0];
+                currentScalePending = item;
+                if (!item.filament_id || item.filament_name === '未绑定耗材') {
+                    // 未绑定，显示绑定入口
+                    compareBox.innerHTML = `
+                        <div style="text-align:center; padding:12px 0;">
+                            <div style="font-size:16px; font-weight:700; color:#f59e0b; margin-bottom:8px;">⚠️ NFC 未绑定耗材</div>
+                            <div style="font-size:13px; color:#6b7280; margin-bottom:4px;">NFC UID: <span style="font-family:monospace; color:#374151;">${item.nfc_uid}</span></div>
+                            <div style="font-size:13px; color:#6b7280; margin-bottom:12px;">实测毛重: <strong style="color:#111827;">${item.measured_weight_g.toFixed(1)} g</strong></div>
+                            <button class="btn btn-primary" onclick="openBindModal('${item.nfc_uid}')" style="height:40px; padding:0 24px;">🔗 绑定耗材</button>
+                            <p style="font-size:11px; color:#9ca3af; margin-top:10px;">绑定后自动计算净重并显示账面对比</p>
+                        </div>
+                    `;
+                    actionBtns.style.display = 'none';
+                } else {
+                    const diff = item.difference_g;
+                    const diffColor = diff < 0 ? '#ef4444' : '#10b981';
+                    const diffSign = diff > 0 ? '+' : '';
+                    const theory = item.expected_weight_g !== null ? item.expected_weight_g.toFixed(1) : '--';
+                    const actual = item.measured_weight_g.toFixed(1);
+                    compareBox.innerHTML = `
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div style="text-align:center; background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
+                                <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">系统理论剩余</div>
+                                <div style="font-size:24px; font-weight:700; color:#111827;">${theory} g</div>
+                            </div>
+                            <div style="text-align:center; background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
+                                <div style="font-size:12px; color:#6b7280; margin-bottom:4px;">秤端实测剩余</div>
+                                <div style="font-size:24px; font-weight:700; color:#10b981;">${actual} g</div>
+                            </div>
+                        </div>
+                        <div style="text-align:center; margin-bottom:8px;">
+                            <span style="font-size:20px; font-weight:700; color:${diffColor};">Δ 误差: ${diffSign}${diff.toFixed(1)} g</span>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px; color:#374151;">
+                            <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:${item.color_hex || '#888'}; border:1px solid #ccc;"></span>
+                            <strong>${item.filament_name || '未绑定耗材'}</strong>
+                            <span style="color:#9ca3af; font-family:monospace; font-size:11px;">NFC: ${item.nfc_uid}</span>
+                        </div>
+                        <div style="text-align:center; font-size:11px; color:#9ca3af; margin-top:6px;">共 ${data.count} 条待确认，显示最新一条</div>
+                    `;
+                    actionBtns.style.display = 'flex';
+                }
+            }
+        } catch (e) {
+            compareBox.innerHTML = `<div style="text-align:center; color:#ef4444;">网络错误: ${e.message}</div>`;
+            actionBtns.style.display = 'none';
+        }
+        loadPendingScale();
+    }
+
+    async function confirmScaleAction(actionType) {
+        if (!currentScalePending) return alert('没有待确认记录');
+        const item = currentScalePending;
+        const actual = item.measured_weight_g;
+        const diff = item.difference_g || 0;
+        let msg = '';
+        if (actionType === 'failure_correction') {
+            const lost = diff < 0 ? Math.abs(diff) : 0;
+            msg = `将把丢失的 ${lost.toFixed(1)} 克计入打印报废损耗，并覆盖重量为 ${actual.toFixed(1)}g，是否继续？`;
+        } else if (actionType === 'normal_sync') {
+            msg = `将直接覆盖重量为 ${actual.toFixed(1)}g，记为日常累积误差校准，是否继续？`;
+        }
+        if (!confirm(msg)) return;
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/scale/pending/${item.pending_id}/confirm`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({action_type: actionType})
+        });
+        if (res.ok) {
+            alert('✅ 重量已同步，对账流水已记录');
+            loadScaleWorkbench();
+            loadFilaments();
+        } else {
+            alert('操作失败');
+        }
+    }
+
+    function newSpoolAction() {
+        if (!currentScalePending) return alert('没有待确认记录');
+        openBindModal(currentScalePending.nfc_uid);
+    }
+
+    // --- 绑定 NFC 到耗材 ---
+    async function openBindModal(nfcUid) {
+        document.getElementById('bind_nfc_uid').value = nfcUid;
+        document.getElementById('bind_mode_type').value = 'existing';
+        document.getElementById('bind_scale_mode').value = 'spool';
+        toggleBindMode();
+        toggleScaleMode();
+        // 加载已有耗材列表
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/ingest/script-filaments`, {
+            headers: {'X-API-Key': apiKey}
+        });
+        if (res.ok) {
+            const filaments = await res.json();
+            const select = document.getElementById('bind_filament_select');
+            select.innerHTML = filaments.map(f => 
+                `<option value="${f.id}">${f.brand} ${f.material} [${f.color_name}] - 剩余${f.current_weight_g}g</option>`
+            ).join('');
+        }
+        document.getElementById('bindModal').classList.remove('hidden');
+    }
+
+    function closeBindModal() {
+        document.getElementById('bindModal').classList.add('hidden');
+    }
+
+    function toggleBindMode() {
+        const mode = document.getElementById('bind_mode_type').value;
+        document.getElementById('bind_existing_section').classList.toggle('hidden', mode !== 'existing');
+        document.getElementById('bind_new_section').classList.toggle('hidden', mode !== 'new');
+    }
+
+    function toggleScaleMode() {
+        const mode = document.getElementById('bind_scale_mode').value;
+        document.getElementById('bind_spool_section').classList.toggle('hidden', mode !== 'spool');
+        document.getElementById('bind_calibrate_section').classList.toggle('hidden', mode !== 'calibrate');
+    }
+
+    async function submitBind() {
+        const nfcUid = document.getElementById('bind_nfc_uid').value;
+        const bindType = document.getElementById('bind_mode_type').value;
+        const scaleMode = document.getElementById('bind_scale_mode').value;
+        const payload = {
+            nfc_uid: nfcUid,
+            mode: scaleMode
+        };
+        if (bindType === 'existing') {
+            payload.filament_id = parseInt(document.getElementById('bind_filament_select').value);
+        } else {
+            payload.brand = document.getElementById('bind_brand').value;
+            payload.material = document.getElementById('bind_material').value;
+            payload.color_name = document.getElementById('bind_color_name').value || '自定义';
+            payload.color_hex = document.getElementById('bind_color_hex').value;
+            payload.initial_weight_g = parseFloat(document.getElementById('bind_initial_weight').value) || 1000;
+        }
+        if (scaleMode === 'spool') {
+            payload.spool_weight_g = parseFloat(document.getElementById('bind_spool_weight').value) || 250;
+        } else {
+            // 未知皮重模式：皮重 = 总重 - 当前料重
+            const total = parseFloat(document.getElementById('bind_total_weight').value);
+            const currentMat = parseFloat(document.getElementById('bind_material_weight').value);
+            if (!total || total <= 0) return alert('请输入当前总重（盘+料）');
+            if (isNaN(currentMat) || currentMat < 0) return alert('请输入有效的当前料重');
+            const spoolWeight = Math.round((total - currentMat) * 100) / 100;
+            if (spoolWeight < 0) return alert(`计算出的皮重为负(${spoolWeight}g)，请检查输入`);
+            payload.spool_weight_g = spoolWeight;
+            // 如果是新增耗材，当前料重作为初始重量
+            if (!payload.filament_id) {
+                payload.initial_weight_g = currentMat;
+            }
+        }
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/scale/bind`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            alert(`✅ 绑定成功！\n耗材: ${data.filament.brand} ${data.filament.material} [${data.filament.color_name}]\n皮重: ${data.filament.spool_weight_g}g`);
+            closeBindModal();
+            loadScaleWorkbench();
+            loadFilaments();
+        } else {
+            const err = await res.json();
+            alert('绑定失败: ' + (err.detail || JSON.stringify(err)));
+        }
+    }
+
+    async function loadEspDeviceInfo() {
+        const token = localStorage.getItem('token');
+        const box = document.getElementById('espDeviceBox');
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/device/info`, {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            if (res.ok) {
+                const dev = await res.json();
+                espDeviceIp = dev.ip || "";
+                const statusColor = dev.online ? '#10b981' : '#ef4444';
+                const statusText = dev.online ? '🟢 在线（开机状态，可即时更新）' : '🔴 离线（休眠中，下次开机时自动更新）';
+                box.innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">
+                        <div><span style="color:#9ca3af;">设备状态:</span> <strong style="color:${statusColor};">${statusText}</strong></div>
+                        <div><span style="color:#9ca3af;">设备 ID:</span> ${dev.device_id || '-'}</div>
+                        <div><span style="color:#9ca3af;">IP 地址:</span> <span style="font-family:monospace;">${dev.ip || '未上报'}</span></div>
+                        <div><span style="color:#9ca3af;">最后心跳:</span> ${dev.last_heartbeat || '-'}</div>
+                    </div>
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid #374151; font-size:12px; color:#9ca3af;">
+                        💡 开机状态下每 30 秒自动查询更新指令；休眠中则下次开机称重时自动检查。
+                    </div>`;
+            } else {
+                box.innerText = '获取设备信息失败 (HTTP ' + res.status + ')';
+            }
+        } catch (e) {
+            box.innerText = '网络错误: ' + e.message;
+        }
+        // 同时加载实时状态
+        loadDeviceRealtimeStatus();
+    }
+
+    // 加载设备实时状态并渲染模拟OLED
+    async function loadDeviceRealtimeStatus() {
+        const apiKey = await getOrFetchApiKey();
+        const oled = document.getElementById('oledScreen');
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/device/status?device_id=scale_001`, {
+                headers: {'X-API-Key': apiKey}
+            });
+            if (!res.ok) { oled.innerHTML = '<div style="color:#666;font-size:10px;text-align:center;line-height:110px;">状态获取失败</div>'; return; }
+            const status = await res.json();
+            if (!status.online) {
+                oled.innerHTML = '<div style="color:#666;font-size:10px;text-align:center;line-height:110px;">设备离线</div>';
+                return;
+            }
+            let html = '';
+            const pageName = status.current_page === 'weighing' ? '丝衡' :
+                             status.current_page === 'device_info' ? '设备信息' : 'WiFi状态';
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #444;padding-bottom:2px;margin-bottom:4px;">`;
+            html += `<span style="color:#ffd700;font-size:11px;">${pageName}</span>`;
+            let barsHtml = '';
+            for (let i = 0; i < 4; i++) {
+                const h = 4 + i * 3;
+                const filled = i < status.wifi_bars;
+                barsHtml += `<span style="display:inline-block;width:3px;height:${h}px;background:${filled?'#0f0':'#333'};margin-left:1px;vertical-align:bottom;"></span>`;
+            }
+            html += `<span>${barsHtml}</span></div>`;
+            if (status.current_page === 'weighing') {
+                html += `<div style="text-align:center;margin-top:14px;">`;
+                html += `<span style="color:#0f0;font-size:32px;font-weight:bold;">${status.current_weight.toFixed(1)}</span>`;
+                html += `<span style="color:#0f0;font-size:14px;"> g</span></div>`;
+                html += `<div style="text-align:center;color:#888;font-size:10px;margin-top:8px;">稳定</div>`;
+            } else if (status.current_page === 'device_info') {
+                html += `<div style="color:#0f0;font-size:11px;line-height:1.8;">`;
+                html += `设备: ${status.device_id}<br>固件: v${status.firmware_version || '1.0.0'}<br>`;
+                html += `IP: ${status.ip_address || '-'}<br></div>`;
+            } else if (status.current_page === 'wifi_config') {
+                html += `<div style="color:#0f0;font-size:11px;line-height:1.8;">`;
+                html += `SSID: Xiaomi_4-6<br>状态: 已连接<br>`;
+                html += `信号: ${status.wifi_rssi} dBm (${status.wifi_bars}格)<br></div>`;
+            }
+            oled.innerHTML = html;
+        } catch (e) {
+            oled.innerHTML = '<div style="color:#666;font-size:10px;text-align:center;line-height:110px;">网络错误</div>';
+        }
+    }
+
+    async function switchDevicePage(page) {
+        const apiKey = await getOrFetchApiKey();
+        const statusEl = document.getElementById('deviceCmdStatus');
+        statusEl.style.color = '#f59e0b';
+        statusEl.innerText = '正在下发指令...';
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/device/command`, {
+                method: 'POST',
+                headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({device_id: 'scale_001', command: 'switch_page', params: {page: page}})
+            });
+            if (res.ok) {
+                statusEl.style.color = '#10b981';
+                statusEl.innerText = '✅ 指令已下发，设备10秒内切换';
+                setTimeout(() => { loadDeviceRealtimeStatus(); }, 12000);
+            } else {
+                statusEl.style.color = '#ef4444';
+                statusEl.innerText = '❌ 下发失败';
+            }
+        } catch (e) {
+            statusEl.style.color = '#ef4444';
+            statusEl.innerText = '❌ 网络错误: ' + e.message;
+        }
+    }
+
+    async function rebootDevice() {
+        if (!confirm('确认远程重启设备？')) return;
+        const apiKey = await getOrFetchApiKey();
+        const statusEl = document.getElementById('deviceCmdStatus');
+        statusEl.style.color = '#f59e0b';
+        statusEl.innerText = '正在下发重启指令...';
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/device/command`, {
+                method: 'POST',
+                headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({device_id: 'scale_001', command: 'reboot'})
+            });
+            if (res.ok) {
+                statusEl.style.color = '#10b981';
+                statusEl.innerText = '✅ 重启指令已下发';
+            } else {
+                statusEl.style.color = '#ef4444';
+                statusEl.innerText = '❌ 下发失败';
+            }
+        } catch (e) {
+            statusEl.style.color = '#ef4444';
+            statusEl.innerText = '❌ 网络错误: ' + e.message;
+        }
+    }
+
+    async function resetDeviceConfig() {
+        if (!confirm('确认初始化重置配网？\n\n这将清除设备保存的 WiFi 密码和服务器配置，设备重启后进入配网模式，需要用手机连接热点重新配置。')) return;
+        const apiKey = await getOrFetchApiKey();
+        const statusEl = document.getElementById('deviceCmdStatus');
+        statusEl.style.color = '#f59e0b';
+        statusEl.innerText = '正在下发重置配网指令...';
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/device/command`, {
+                method: 'POST',
+                headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+                body: JSON.stringify({device_id: 'scale_001', command: 'reset_config'})
+            });
+            if (res.ok) {
+                statusEl.style.color = '#10b981';
+                statusEl.innerText = '✅ 重置指令已下发，设备10秒内重启进入配网模式';
+            } else {
+                statusEl.style.color = '#ef4444';
+                statusEl.innerText = '❌ 下发失败';
+            }
+        } catch (e) {
+            statusEl.style.color = '#ef4444';
+            statusEl.innerText = '❌ 网络错误: ' + e.message;
+        }
+    }
+
+    async function checkForUpdate() {
+        const token = localStorage.getItem('token');
+        const logBox = document.getElementById('otaUpdateLog');
+        logBox.classList.remove('hidden');
+        logBox.innerHTML = '<div>[1/2] 正在检查服务器最新固件...</div>';
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/firmware/info`, {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            if (!res.ok) {
+                logBox.innerHTML += '<div style="color:#ef4444;">❌ 获取服务器固件信息失败</div>';
+                return;
+            }
+            const info = await res.json();
+            latestFirmwareVersion = info.version || '1.0.0';
+            latestFirmwareMd5 = info.md5 || '';
+            const sizeKB = info.size_bytes ? (info.size_bytes / 1024).toFixed(1) : 0;
+
+            logBox.innerHTML += `<div>[2/2] 服务器最新版本: <strong>v${latestFirmwareVersion}</strong> (${sizeKB} KB)</div>`;
+
+            if (!info.file_exists) {
+                logBox.innerHTML += '<div style="color:#f59e0b;">⚠️ 服务器上还没有固件文件，请先在下方上传固件</div>';
+                document.getElementById('btnTriggerOta').disabled = true;
+                return;
+            }
+
+            logBox.innerHTML += '<div style="color:#10b981;">✅ 固件就绪，点击"立即更新"下发指令</div>';
+            document.getElementById('btnTriggerOta').disabled = false;
+        } catch (e) {
+            logBox.innerHTML += '<div style="color:#ef4444;">❌ 检查更新失败: ' + e.message + '</div>';
+        }
+    }
+
+    async function triggerOtaUpdate() {
+        const token = localStorage.getItem('token');
+        if (!confirm(`确认向 ESP32 下发 v${latestFirmwareVersion} 更新指令？\n\nESP32 将在 30 秒内自动开始下载并升级，升级过程中请勿断电。`)) return;
+
+        const logBox = document.getElementById('otaUpdateLog');
+        logBox.classList.remove('hidden');
+        logBox.innerHTML += '<div style="margin-top:8px;">📤 正在向服务端下发更新指令...</div>';
+        document.getElementById('btnTriggerOta').disabled = true;
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/ota/push`, {
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const data = await res.json();
+            if (res.ok) {
+                logBox.innerHTML += `<div style="color:#10b981;">✅ ${data.message}</div>`;
+                logBox.innerHTML += '<div>⏳ ESP32 正在下载固件（约 30 秒），下载完成后自动校验 MD5 并重启...</div>';
+                logBox.innerHTML += '<div>预计 1-2 分钟后更新完成，设备自动重启后新版本生效。</div>';
+            } else {
+                logBox.innerHTML += '<div style="color:#ef4444;">❌ 下发失败: ' + (data.detail || JSON.stringify(data)) + '</div>';
+                document.getElementById('btnTriggerOta').disabled = false;
+            }
+        } catch (e) {
+            logBox.innerHTML += '<div style="color:#ef4444;">❌ 下发失败: ' + e.message + '</div>';
+            document.getElementById('btnTriggerOta').disabled = false;
+        }
+    }
+
+    async function loadFirmwareInfo() {
+        const token = localStorage.getItem('token');
+        const box = document.getElementById('firmwareInfoBox');
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/firmware/info`, {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            if (res.ok) {
+                const info = await res.json();
+                const sizeKB = info.size_bytes ? (info.size_bytes / 1024).toFixed(1) : 0;
+                box.innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px;">
+                        <div><span style="color:#9ca3af;">当前版本:</span> <strong style="color:#10b981;">v${info.version || '1.0.0'}</strong></div>
+                        <div><span style="color:#9ca3af;">固件文件:</span> ${info.original_filename || info.filename || '-'}</div>
+                        <div><span style="color:#9ca3af;">文件大小:</span> ${info.file_exists ? sizeKB + ' KB' : '<span style="color:#ef4444;">未上传</span>'}</div>
+                        <div><span style="color:#9ca3af;">MD5:</span> <span style="font-family:monospace; font-size:11px;">${info.md5 ? info.md5.substring(0,16) + '...' : '-'}</span></div>
+                        <div><span style="color:#9ca3af;">上传时间:</span> ${info.uploaded_at || '-'}</div>
+                        <div><span style="color:#9ca3af;">上传者:</span> ${info.uploaded_by || '-'}</div>
+                    </div>`;
+            } else {
+                box.innerText = '获取固件信息失败 (HTTP ' + res.status + ')';
+            }
+        } catch (e) {
+            box.innerText = '网络错误: ' + e.message;
+        }
+    }
+
+    async function uploadFirmware() {
+        const version = document.getElementById('esp_fw_version').value.trim();
+        const fileInput = document.getElementById('esp_fw_file');
+        if (!fileInput.files || fileInput.files.length === 0) return alert('请选择 .bin 固件文件！');
+        const file = fileInput.files[0];
+        if (!file.name.endsWith('.bin')) return alert('仅支持 .bin 格式固件文件！');
+
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('version', version);
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/firmware/upload`, {
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + token},
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`✅ ${data.message}\n版本: v${data.info.version}\n大小: ${(data.info.size_bytes/1024).toFixed(1)} KB\n\nESP32 下次启动/复位时将自动 OTA 升级！`);
+                document.getElementById('esp_fw_version').value = '';
+                fileInput.value = '';
+                loadFirmwareInfo();
+            } else {
+                alert('上传失败: ' + (data.detail || JSON.stringify(data)));
+            }
+        } catch (e) {
+            alert('网络错误: ' + e.message);
+        }
+    }
+
+    async function loadPendingScale() {
+        const apiKey = await getOrFetchApiKey();
+        const tbody = document.getElementById('pendingScaleBody');
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/pending`, {
+                headers: {'X-API-Key': apiKey}
+            });
+            if (res.ok) {
+                const list = await res.json();
+                if (list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#9ca3af;">暂无待确认记录</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = list.map(p => {
+                    const diffColor = p.difference_g > 0 ? '#ef4444' : '#10b981';
+                    const diffStr = p.difference_g !== null ? `<span style="color:${diffColor};font-weight:bold;">${p.difference_g > 0 ? '+' : ''}${p.difference_g}g</span>` : '-';
+                    return `
+                        <tr>
+                            <td data-label="ID"><strong>#${p.id}</strong></td>
+                            <td data-label="设备">${p.device_id}</td>
+                            <td data-label="NFC" style="font-size:11px; font-family:monospace;">${p.nfc_uid}</td>
+                            <td data-label="实测"><strong>${p.measured_weight_g}g</strong></td>
+                            <td data-label="预期">${p.expected_weight_g !== null ? p.expected_weight_g + 'g' : '-'}</td>
+                            <td data-label="误差">${diffStr}</td>
+                            <td data-label="时间" style="font-size:11px; color:#6b7280;">${p.created_at || '-'}</td>
+                            <td data-label="操作">
+                                <button class="btn btn-primary" style="height:26px; padding:0 8px; font-size:11px;" onclick="confirmScalePending(${p.id})">确认覆写</button>
+                                <button class="btn btn-secondary" style="height:26px; padding:0 8px; font-size:11px;" onclick="rejectScalePending(${p.id})">忽略</button>
+                            </td>
+                        </tr>`;
+                }).join('');
+            }
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ef4444;">加载失败: ' + e.message + '</td></tr>';
+        }
+    }
+
+    async function confirmScalePending(id) {
+        if (!confirm(`确认将 #${id} 号记录的实测重量覆写至耗材档案？`)) return;
+        const apiKey = await getOrFetchApiKey();
+        const res = await fetch(`${BASE_URL}/api/scale/pending/${id}/confirm`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey}
+        });
+        if (res.ok) {
+            alert('已确认，耗材重量已更新！');
+            loadPendingScale();
+            loadFilaments();
+        } else {
+            alert('操作失败');
+        }
+    }
+
+    async function rejectScalePending(id) {
+        const apiKey = await getOrFetchApiKey();
+        await fetch(`${BASE_URL}/api/scale/pending/${id}/reject`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey}
+        });
+        loadPendingScale();
+    }
+
+    window.onload = function() {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('username');
+        if (token && user) {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            document.getElementById('userHeaderBox').classList.remove('hidden');
+            document.getElementById('currentUser').innerText = user;
+            loadFilaments();
+        }
+        // 设备实时状态自动刷新（每5秒）
+        setInterval(() => {
+            if (!document.getElementById('tab_esp').classList.contains('hidden')) {
+                loadDeviceRealtimeStatus();
+            }
+        }, 5000);
+    }
+</script>
+</body>
+</html>
