@@ -1,3 +1,5 @@
+[English](README.en.md) | 中文
+
 # Bambu Filament Manager Pro
 
 > 3D打印耗材全生命周期管理系统 - 专业版
