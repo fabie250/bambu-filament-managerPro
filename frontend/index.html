@@ -224,11 +224,13 @@
                     <div style="flex: 1; min-width: 200px;">
                         <button class="btn btn-primary" onclick="switchDevicePage('weighing')" style="width: 100%; margin-bottom: 6px;">⚖️ 称重页面</button>
                         <button class="btn btn-amber" onclick="switchDevicePage('wifi_config')" style="width: 100%; margin-bottom: 6px;">📶 WiFi状态</button>
-                        <button class="btn btn-secondary" onclick="rebootDevice()" style="width: 100%;">🔄 重启设备</button>
+                        <button class="btn btn-info" onclick="switchDevicePage('device_info')" style="width: 100%;">📱 设备信息</button>
                     </div>
                     <div style="flex: 1; min-width: 200px;">
                         <!-- 这里加入了修改后的传感器校准向导按钮 -->
                         <button class="btn btn-blue" onclick="openCalibrationModal()" style="width: 100%; margin-bottom: 6px;">🎯 传感器校准向导</button>
+                        <button class="btn btn-purple" onclick="switchDevicePartition()" style="width: 100%; margin-bottom: 6px;">🔄 切换OTA分区</button>
+                        <button class="btn btn-secondary" onclick="rebootDevice()" style="width: 100%; margin-bottom: 6px;">🔄 重启设备</button>
                         <button class="btn btn-danger" onclick="resetDeviceConfig()" style="width: 100%;">⚠️ 重置配网</button>
                     </div>
                 </div>
@@ -236,13 +238,39 @@
 
             <!-- 双轨固件更新 -->
             <div class="card">
-                <h3>🚀 固件更新中心</h3>
+                <h3>🚀 固件更新中心 <span style="font-size:12px;color:#9ca3af;">v1.2.1</span></h3>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px;">
-                    <div style="flex: 1; min-width: 280px; background: #f9fafb; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px;">📡 ESP32 硬件固件</div>
-                        <span id="fwNewBadge" class="badge-warning hidden">NEW</span>
-                        <div id="fwVersionText" style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">当前版本: 读取中...</div>
-                        <button id="btnFwUpdate" class="btn btn-blue" style="width: 100%;" onclick="checkFwUpdate()">检查固件更新</button>
+                    <!-- 本地固件 -->
+                    <div style="flex: 1; min-width: 280px; background: #f0fdf4; padding: 16px; border: 1px solid #bbf7d0; border-radius: 8px;">
+                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #166534;">📤 本地固件更新</div>
+                        <span id="fwLocalNewBadge" class="badge-warning hidden">NEW</span>
+                        <div id="fwLocalVersionText" style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">当前版本: 读取中...</div>
+                        <div id="fwLocalInfo" style="font-size: 11px; color: #6b7280; margin-bottom: 10px; display: none;"></div>
+                        <button id="btnFwLocalUpdate" class="btn btn-green" style="width: 100%; margin-bottom: 8px;" onclick="checkFwUpdate('local')">检查本地固件更新</button>
+                        <div style="border-top: 1px solid #bbf7d0; margin: 10px 0; padding-top: 10px;">
+                            <div style="margin-bottom: 8px;">
+                                <label style="font-size: 12px; color: #374151; display: block; margin-bottom: 4px;">选择固件文件 (.bin)</label>
+                                <input type="file" id="fwFileInput" accept=".bin" style="width: 100%; font-size: 12px;">
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="font-size: 12px; color: #374151; display: block; margin-bottom: 4px;">版本号 (可选)</label>
+                                <input type="text" id="fwVersionInput" placeholder="例如: 1.2.1" style="width: 100%; height: 32px; padding: 0 8px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 4px;">
+                            </div>
+                            <button id="btnFwUpload" class="btn btn-blue" style="width: 100%; height: 36px; font-size: 13px;" onclick="uploadFirmware()">上传固件到服务器</button>
+                            <div id="fwUploadMsg" style="font-size: 11px; margin-top: 8px; display: none;"></div>
+                        </div>
+                    </div>
+                    <!-- GitHub 在线更新 -->
+                    <div style="flex: 1; min-width: 280px; background: #eff6ff; padding: 16px; border: 1px solid #bfdbfe; border-radius: 8px;">
+                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #1e40af;">🌐 GitHub 在线更新</div>
+                        <span id="fwGithubNewBadge" class="badge-warning hidden">NEW</span>
+                        <div id="fwGithubVersionText" style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">当前版本: 读取中...</div>
+                        <div id="fwGithubInfo" style="font-size: 11px; color: #6b7280; margin-bottom: 10px; display: none;"></div>
+                        <button id="btnFwGithubUpdate" class="btn btn-blue" style="width: 100%;" onclick="checkFwUpdate('github')">检查 GitHub 在线更新</button>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 10px;">
+                            从 GitHub Releases 拉取最新固件<br>
+                            仓库: fabie250/siheng
+                        </div>
                     </div>
                 </div>
             </div>
@@ -579,15 +607,33 @@
         document.getElementById('calibrationModal').classList.add('hidden');
     }
 
-    function loadEspPage() { loadEspDeviceInfo(); loadScaleWorkbench(); }
+    function loadEspPage() { loadEspDeviceInfo(); loadScaleWorkbench(); loadFirmwareInfo(); }
     async function loadEspDeviceInfo() {
         const apiKey = await getOrFetchApiKey();
         try {
-            const res = await fetch(`${BASE_URL}/api/scale/device/status?device_id=scale_001`, { headers: {'X-API-Key': apiKey} });
+            const res = await fetch(`${BASE_URL}/api/scale/device/status?device_id=scale_001&_t=${Date.now()}`, { headers: {'X-API-Key': apiKey} });
             if (res.ok) {
                 const dev = await res.json();
-                document.getElementById('fwVersionText').innerText = `当前版本: v${dev.firmware_version || '1.0.0'}`;
-                document.getElementById('espDeviceBox').innerHTML = `状态: ${dev.online ? '🟢 在线' : '🔴 离线'} | IP: ${dev.ip_address || '-'}`;
+                espCurrentVersion = dev.firmware_version || '1.0.0';
+                // 更新本地和GitHub的版本显示
+                document.getElementById('fwLocalVersionText').innerText = `当前版本: v${espCurrentVersion}`;
+                document.getElementById('fwGithubVersionText').innerText = `当前版本: v${espCurrentVersion}`;
+                // 显示设备状态和系统信息
+                const freeHeapKB = dev.free_heap ? (dev.free_heap / 1024).toFixed(1) : '-';
+                const freeSpaceKB = dev.free_sketch_space ? (dev.free_sketch_space / 1024).toFixed(1) : '-';
+                document.getElementById('espDeviceBox').innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div><b>状态:</b> ${dev.online ? '🟢 在线' : '🔴 离线'}</div>
+                        <div><b>IP地址:</b> ${dev.ip_address || '-'}</div>
+                        <div><b>固件版本:</b> v${dev.firmware_version || '-'}</div>
+                        <div><b>当前分区:</b> <span style="color:#2563eb;font-weight:bold;">${dev.current_partition || '-'}</span></div>
+                        <div><b>剩余内存:</b> ${freeHeapKB} KB</div>
+                        <div><b>剩余存储:</b> ${freeSpaceKB} KB</div>
+                        <div><b>内核版本:</b> ${dev.sdk_version || '-'}</div>
+                        <div><b>WiFi信号:</b> ${dev.wifi_rssi || '-'} dBm</div>
+                        <div><b>最后心跳:</b> ${dev.last_heartbeat || '-'}</div>
+                    </div>
+                `;
                 if (dev.online) document.getElementById('oledScreen').innerHTML = `<div style="color:#0f0;font-size:24px;text-align:center;padding-top:30px;">${dev.current_weight.toFixed(1)} g</div>`;
             }
         } catch (e) { document.getElementById('espDeviceBox').innerText = '网络错误'; }
@@ -595,22 +641,140 @@
     async function switchDevicePage(page) { await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'switch_page', params: {page}}) }); alert("指令已下发"); }
     async function rebootDevice() { if (confirm("确认重启？")) await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'reboot'}) }); }
     async function resetDeviceConfig() { if (confirm("确认重置配网？")) await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'reset_config'}) }); }
+    async function switchDevicePartition() {
+        if (confirm("确认切换到另一个分区？设备将自动重启并切换分区。\n\n注意：切换后将运行另一个分区的固件版本！")) {
+            await fetch(`${BASE_URL}/api/scale/device/switch_partition?device_id=scale_001`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey()} });
+            alert("切换分区指令已下发，设备将在5秒内重启并切换分区。");
+        }
+    }
 
     let globalLatestFwUrl = "";
-    async function checkFwUpdate() {
-        const res = await fetch(`${BASE_URL}/api/scale/ota_check`, { headers: {'X-API-Key': await getOrFetchApiKey()} });
+    let globalFwSource = "";
+    // 版本号比较：返回 1 表示 v1 > v2，-1 表示 v1 < v2，0 表示相等
+    function compareVersions(v1, v2) {
+        const parts1 = v1.replace(/^v/, '').split('.').map(Number);
+        const parts2 = v2.replace(/^v/, '').split('.').map(Number);
+        for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+            const p1 = parts1[i] || 0;
+            const p2 = parts2[i] || 0;
+            if (p1 > p2) return 1;
+            if (p1 < p2) return -1;
+        }
+        return 0;
+    }
+    async function checkFwUpdate(source = "") {
+        const url = source ? `${BASE_URL}/api/scale/ota_check?source=${source}` : `${BASE_URL}/api/scale/ota_check`;
+        const res = await fetch(url, { headers: {'X-API-Key': await getOrFetchApiKey()} });
         const data = await res.json();
-        if (data.status === "success" && data.latest_version !== (espCurrentVersion || '1.0.0')) {
-            document.getElementById('fwNewBadge').classList.remove('hidden');
+
+        // 根据 source 选择对应的 UI 元素
+        const isLocal = source === 'local' || data.source === 'local';
+        const badgeId = isLocal ? 'fwLocalNewBadge' : 'fwGithubNewBadge';
+        const versionTextId = isLocal ? 'fwLocalVersionText' : 'fwGithubVersionText';
+        const btnId = isLocal ? 'btnFwLocalUpdate' : 'btnFwGithubUpdate';
+        const btnText = isLocal ? '🚀 一键升级（本地固件）' : '🚀 一键升级（GitHub）';
+
+        const currentVer = espCurrentVersion || '1.0.0';
+        const remoteVer = data.latest_version || '0.0.0';
+
+        if (data.status === "success" && compareVersions(remoteVer, currentVer) > 0) {
+            document.getElementById(badgeId).classList.remove('hidden');
             globalLatestFwUrl = data.download_url;
-            document.getElementById('btnFwUpdate').innerText = "🚀 一键升级 ESP32 固件";
-            document.getElementById('btnFwUpdate').onclick = async () => {
-                if (confirm("确认升级？")) {
+            globalFwSource = data.source || source;
+            document.getElementById(btnId).innerText = btnText;
+            document.getElementById(btnId).onclick = async () => {
+                if (confirm(`确认升级到 v${remoteVer}？设备将自动重启并拉取固件。`)) {
                     await fetch(`${BASE_URL}/api/scale/ota/push`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({download_url: globalLatestFwUrl}) });
-                    alert("升级指令已下发");
+                    alert("升级指令已下发，设备将在5秒内重启并升级。");
                 }
             };
-        } else { alert("已是最新版本"); }
+            // 用 confirm 弹窗，有确定和取消两个按钮
+            if (confirm(`发现新版本 v${remoteVer}（${isLocal ? '本地固件' : 'GitHub'}）\n当前版本: v${currentVer}\n\n是否立即升级？`)) {
+                document.getElementById(btnId).click();
+            }
+        } else {
+            document.getElementById(versionTextId).innerText = `当前版本: v${currentVer}（已是最新）`;
+            alert(`已是最新版本（${isLocal ? '本地固件' : 'GitHub'}）\n当前版本: v${currentVer}\n远程版本: v${remoteVer}`);
+        }
+    }
+
+    async function loadFirmwareInfo() {
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/firmware/info`, { headers: {'X-API-Key': await getOrFetchApiKey()} });
+            if (res.ok) {
+                const info = await res.json();
+                const localInfoDiv = document.getElementById('fwLocalInfo');
+                if (info.file_exists) {
+                    localInfoDiv.style.display = 'block';
+                    localInfoDiv.innerHTML = `📦 服务器本地固件: v${info.version || '未知'} | ${(info.size_bytes / 1024).toFixed(1)} KB | 上传: ${info.uploaded_at || '未知'}`;
+                } else {
+                    localInfoDiv.style.display = 'none';
+                }
+            }
+        } catch (e) {
+            console.log('加载固件信息失败:', e);
+        }
+    }
+
+    async function uploadFirmware() {
+        const fileInput = document.getElementById('fwFileInput');
+        const versionInput = document.getElementById('fwVersionInput');
+        const msgDiv = document.getElementById('fwUploadMsg');
+        const uploadBtn = document.getElementById('btnFwUpload');
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            msgDiv.style.display = 'block';
+            msgDiv.style.color = '#dc2626';
+            msgDiv.innerText = '❌ 请先选择固件文件 (.bin)';
+            return;
+        }
+
+        const file = fileInput.files[0];
+        if (!file.name.endsWith('.bin')) {
+            msgDiv.style.display = 'block';
+            msgDiv.style.color = '#dc2626';
+            msgDiv.innerText = '❌ 仅支持 .bin 格式的固件文件';
+            return;
+        }
+
+        uploadBtn.disabled = true;
+        uploadBtn.innerText = '上传中...';
+        msgDiv.style.display = 'block';
+        msgDiv.style.color = '#6b7280';
+        msgDiv.innerText = '正在上传固件...';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            if (versionInput.value.trim()) {
+                formData.append('version', versionInput.value.trim());
+            }
+
+            const res = await fetch(`${BASE_URL}/api/scale/firmware/upload`, {
+                method: 'POST',
+                headers: {'X-API-Key': await getOrFetchApiKey()},
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                msgDiv.style.color = '#16a34a';
+                msgDiv.innerText = `✅ ${data.message}`;
+                versionInput.value = '';
+                fileInput.value = '';
+                await loadFirmwareInfo();
+                await checkFwUpdate();
+            } else {
+                msgDiv.style.color = '#dc2626';
+                msgDiv.innerText = `❌ 上传失败: ${data.detail || data.message || '未知错误'}`;
+            }
+        } catch (e) {
+            msgDiv.style.color = '#dc2626';
+            msgDiv.innerText = `❌ 上传失败: ${e.message}`;
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerText = '上传固件到服务器';
+        }
     }
 
     let currentScalePending = null;
@@ -659,6 +823,7 @@
             document.getElementById('userHeaderBox').classList.remove('hidden');
             document.getElementById('currentUser').innerText = localStorage.getItem('username');
             loadFilaments();
+            loadFirmwareInfo();
         }
     }
 </script>
