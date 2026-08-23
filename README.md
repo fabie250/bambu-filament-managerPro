@@ -682,8 +682,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 ---
   - **固件问题**
-    1、固件更新逻辑待优化
-    2、网页端 客户端固件可上传但是无法立即更新 显示❌ 下发失败: Not Found
+  - 1、固件更新逻辑待优化
+  - 2、网页端 客户端固件可上传但是无法立即更新 显示❌ 下发失败: Not Found
   - **软件问题**
   - 1、Liunx前端页面的ESP管理中丝衡（电子秤）校准模块消失
 ---
