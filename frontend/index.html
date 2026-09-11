@@ -27,7 +27,9 @@
         .btn-blue { background: #2563eb; color: #ffffff; }
         .btn-purple { background: #8b5cf6; color: #ffffff; }
         .btn-amber { background: #f59e0b; color: #ffffff; }
+.btn-warning { background: #d97706; color: #ffffff; }
         .btn-danger { background: #ef4444; color: #ffffff; }
+.btn-dark { background: #374151; color: #ffffff; }
         
         /* 修复隐藏显示问题，加上 !important 强制覆盖 */
         .alert-msg { margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px; display: none; }
@@ -229,9 +231,11 @@
                     <div style="flex: 1; min-width: 200px;">
                         <!-- 这里加入了修改后的传感器校准向导按钮 -->
                         <button class="btn btn-blue" onclick="openCalibrationModal()" style="width: 100%; margin-bottom: 6px;">🎯 传感器校准向导</button>
+                        <button class="btn btn-warning" onclick="clearCalibration()" style="width: 100%; margin-bottom: 6px;">🧹 清除校准数据</button>
                         <button class="btn btn-purple" onclick="switchDevicePartition()" style="width: 100%; margin-bottom: 6px;">🔄 切换OTA分区</button>
                         <button class="btn btn-secondary" onclick="rebootDevice()" style="width: 100%; margin-bottom: 6px;">🔄 重启设备</button>
                         <button class="btn btn-danger" onclick="resetDeviceConfig()" style="width: 100%;">⚠️ 重置配网</button>
+                        <button id="btnDevMode" class="btn btn-dark" onclick="toggleDevMode()" style="width: 100%; margin-top: 6px;">🧪 开发者模式：未知</button>
                     </div>
                 </div>
             </div>
@@ -632,8 +636,10 @@
                         <div><b>内核版本:</b> ${dev.sdk_version || '-'}</div>
                         <div><b>WiFi信号:</b> ${dev.wifi_rssi || '-'} dBm</div>
                         <div><b>最后心跳:</b> ${dev.last_heartbeat || '-'}</div>
+                        <div><b>开发者模式:</b> <span id="espDevModeTag">${dev.dev_mode ? '🟡 已开启（不息屏）' : '⚪ 已关闭'}</span></div>
                     </div>
                 `;
+                updateDevModeBtn(!!dev.dev_mode);
                 if (dev.online) document.getElementById('oledScreen').innerHTML = `<div style="color:#0f0;font-size:24px;text-align:center;padding-top:30px;">${dev.current_weight.toFixed(1)} g</div>`;
             }
         } catch (e) { document.getElementById('espDeviceBox').innerText = '网络错误'; }
@@ -641,6 +647,42 @@
     async function switchDevicePage(page) { await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'switch_page', params: {page}}) }); alert("指令已下发"); }
     async function rebootDevice() { if (confirm("确认重启？")) await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'reboot'}) }); }
     async function resetDeviceConfig() { if (confirm("确认重置配网？")) await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'reset_config'}) }); }
+    function updateDevModeBtn(isOn) {
+        const btn = document.getElementById('btnDevMode');
+        if (!btn) return;
+        if (isOn) {
+            btn.innerText = '🧪 开发者模式：已开启（点此关闭）';
+            btn.style.background = '#f59e0b';
+            btn.style.color = '#fff';
+        } else {
+            btn.innerText = '🧪 开发者模式：已关闭（点此开启）';
+            btn.style.background = '#374151';
+            btn.style.color = '#fff';
+        }
+    }
+    async function toggleDevMode() {
+        const apiKey = await getOrFetchApiKey();
+        // 先查当前状态
+        let isOn = false;
+        try {
+            const res = await fetch(`${BASE_URL}/api/scale/device/status?device_id=scale_001&_t=${Date.now()}`, { headers: {'X-API-Key': apiKey} });
+            if (res.ok) { const dev = await res.json(); isOn = !!dev.dev_mode; }
+        } catch(e) {}
+        if (!isOn) {
+            if (!confirm('⚠️ 警告：即将开启开发者模式！\n\n开启后设备将【永远不息屏】、【禁用自动休眠】，电池供电时电量消耗会显著增加。\n\n仅用于开发调试，确认开启？')) return;
+        } else {
+            if (!confirm('关闭开发者模式？关闭后设备将恢复自动休眠。')) return;
+        }
+        await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'set_dev_mode', params: {enable: !isOn}}) });
+        alert(isOn ? '已下发关闭开发者模式指令，设备将恢复自动休眠。' : '已下发开启开发者模式指令，设备将永久不息屏。');
+        setTimeout(loadEspPage, 3000);
+    }
+    async function clearCalibration() {
+        if (!confirm('⚠️ 确认清除校准数据？\n\n将恢复默认校准系数(326.5)并重新去皮，用于解决校准异常导致重量一直为0的问题。')) return;
+        await fetch(`${BASE_URL}/api/scale/device/command`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey(), 'Content-Type': 'application/json'}, body: JSON.stringify({device_id: 'scale_001', command: 'clear_calibration'}) });
+        alert('已下发清除校准指令，设备恢复默认系数并重新去皮。');
+        setTimeout(loadEspPage, 5000);
+    }
     async function switchDevicePartition() {
         if (confirm("确认切换到另一个分区？设备将自动重启并切换分区。\n\n注意：切换后将运行另一个分区的固件版本！")) {
             await fetch(`${BASE_URL}/api/scale/device/switch_partition?device_id=scale_001`, { method: 'POST', headers: {'X-API-Key': await getOrFetchApiKey()} });
