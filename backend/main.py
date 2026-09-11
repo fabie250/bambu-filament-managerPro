@@ -152,6 +152,9 @@ class DeviceStatus(Base):
     sdk_version = Column(String(50), nullable=True)      # 内核版本
     free_sketch_space = Column(Integer, nullable=True)    # 剩余存储
     current_partition = Column(String(10), nullable=True) # 当前分区 A/B
+    dev_mode = Column(Boolean, default=False)  # 开发者模式（开启禁休眠）
+    raw_reading = Column(Integer, nullable=True)  # HX711原始读数（诊断）
+    hx711_ready = Column(Boolean, default=True)  # HX711就绪状态（诊断）
     last_heartbeat = Column(DateTime, default=datetime.datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
@@ -372,6 +375,9 @@ class CommandData(BaseModel):
     params: Optional[Dict[str, Any]] = None
 
 class HeartbeatData(BaseModel):
+    dev_mode: bool = False  # 开发者模式
+    raw_reading: int = 0  # HX711原始读数
+    hx711_ready: bool = True  # HX711就绪状态
     device_id: str
     current_weight: float = 0.0
     wifi_rssi: int = 0
@@ -931,6 +937,17 @@ def reject_scale_pending(pending_id: int, user: User = Depends(verify_script_api
     if not pending or pending.status != "pending": raise HTTPException(status_code=404, detail="记录不存在或已处理")
     pending.status = "rejected"; pending.resolved_at = datetime.datetime.utcnow(); db.commit()
     return {"status": "success", "message": "已拒绝"}
+@app.delete("/api/scale/pending/{pending_id}", tags=["智能称重节点"])
+def delete_scale_pending(pending_id: int, user: User = Depends(verify_script_api_key), db: Session = Depends(get_db)):
+    """物理删除待确认记录（用于清理未绑定耗材的待确认数据，问题8）"""
+    pending = db.query(ScalePending).filter(
+        ScalePending.id == pending_id, ScalePending.user_id == user.id
+    ).first()
+    if not pending:
+        raise HTTPException(status_code=404, detail="待确认记录不存在")
+    db.delete(pending)
+    db.commit()
+    return {"status": "success", "message": "已删除待确认记录"}
 
 @app.post("/api/scale/correct", tags=["智能称重节点"])
 def scale_correct(data: ScaleCorrectData, user: User = Depends(verify_script_api_key), db: Session = Depends(get_db)):
@@ -981,6 +998,9 @@ def scale_heartbeat(data: HeartbeatData, user: User = Depends(verify_script_api_
     status_row.sdk_version = getattr(data, "sdk_version", None)
     status_row.free_sketch_space = getattr(data, "free_sketch_space", None)
     status_row.current_partition = getattr(data, "current_partition", None)
+    status_row.dev_mode = getattr(data, "dev_mode", False)
+    status_row.raw_reading = getattr(data, "raw_reading", 0)
+    status_row.hx711_ready = getattr(data, "hx711_ready", True)
     status_row.last_heartbeat = datetime.datetime.utcnow()
     db.commit()
     return {"status": "ok", "server_time": datetime.datetime.utcnow().isoformat()}
@@ -999,6 +1019,9 @@ def get_device_status(device_id: str = "scale_001", user: User = Depends(verify_
         "sdk_version": status_row.sdk_version,
         "free_sketch_space": status_row.free_sketch_space,
         "current_partition": status_row.current_partition,
+        "dev_mode": bool(status_row.dev_mode),
+        "raw_reading": status_row.raw_reading,
+        "hx711_ready": bool(status_row.hx711_ready),
         "last_heartbeat": (status_row.last_heartbeat + datetime.timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S") if status_row.last_heartbeat else ""
     }
 
