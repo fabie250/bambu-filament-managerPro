@@ -27,15 +27,15 @@
         .btn-blue { background: #2563eb; color: #ffffff; }
         .btn-purple { background: #8b5cf6; color: #ffffff; }
         .btn-amber { background: #f59e0b; color: #ffffff; }
-.btn-warning { background: #d97706; color: #ffffff; }
+        .btn-warning { background: #d97706; color: #ffffff; }
         .btn-danger { background: #ef4444; color: #ffffff; }
-.btn-dark { background: #374151; color: #ffffff; }
-        
+        .btn-dark { background: #374151; color: #ffffff; }
+
         /* 修复隐藏显示问题，加上 !important 强制覆盖 */
         .alert-msg { margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px; display: none; }
         .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; display: block !important; }
         .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block !important; }
-        
+
         .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
         .hidden { display: none !important; }
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -234,15 +234,19 @@
                         <button class="btn btn-warning" onclick="clearCalibration()" style="width: 100%; margin-bottom: 6px;">🧹 清除校准数据</button>
                         <button class="btn btn-purple" onclick="switchDevicePartition()" style="width: 100%; margin-bottom: 6px;">🔄 切换OTA分区</button>
                         <button class="btn btn-secondary" onclick="rebootDevice()" style="width: 100%; margin-bottom: 6px;">🔄 重启设备</button>
+                        <button class="btn btn-info" onclick="wakePc()" style="width: 100%; margin-bottom: 6px;">🖥️ 远程开机 (WOL)</button>
                         <button class="btn btn-danger" onclick="resetDeviceConfig()" style="width: 100%;">⚠️ 重置配网</button>
                         <button id="btnDevMode" class="btn btn-dark" onclick="toggleDevMode()" style="width: 100%; margin-top: 6px;">🧪 开发者模式：未知</button>
+                        <div style="margin-top:8px;padding:8px 10px;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#92400e;line-height:1.5;">
+                            ⚠️ 远程开机需先开启<b>开发者模式</b>，否则 ESP32 80 秒自动休眠后无法接收开机指令。
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- 双轨固件更新 -->
             <div class="card">
-                <h3>🚀 固件更新中心 <span style="font-size:12px;color:#9ca3af;">v1.2.1</span></h3>
+                <h3>🚀 固件更新中心 <span style="font-size:12px;color:#9ca3af;">v1.2.3</span></h3>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px;">
                     <!-- 本地固件 -->
                     <div style="flex: 1; min-width: 280px; background: #f0fdf4; padding: 16px; border: 1px solid #bbf7d0; border-radius: 8px;">
@@ -258,7 +262,7 @@
                             </div>
                             <div style="margin-bottom: 8px;">
                                 <label style="font-size: 12px; color: #374151; display: block; margin-bottom: 4px;">版本号 (可选)</label>
-                                <input type="text" id="fwVersionInput" placeholder="例如: 1.2.1" style="width: 100%; height: 32px; padding: 0 8px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                <input type="text" id="fwVersionInput" placeholder="例如: 1.2.3" style="width: 100%; height: 32px; padding: 0 8px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 4px;">
                             </div>
                             <button id="btnFwUpload" class="btn btn-blue" style="width: 100%; height: 36px; font-size: 13px;" onclick="uploadFirmware()">上传固件到服务器</button>
                             <div id="fwUploadMsg" style="font-size: 11px; margin-top: 8px; display: none;"></div>
@@ -388,7 +392,7 @@
                 </div>
                 <button class="btn btn-amber" style="width: 100%; height:44px; font-size:14px;" onclick="doCalibTare()">已清空，确认去皮 (Tare)</button>
             </div>
-            
+
             <div id="calibStep2" class="hidden">
                 <p style="font-size:16px; font-weight:bold; margin-bottom:12px; color:#10B981;">第二步：放上标准砝码</p>
                 <div style="background:#ECFDF5; border-left:4px solid #10B981; padding:12px; margin-bottom:16px; border-radius:4px;">
@@ -424,7 +428,7 @@
         }
         msgDiv.innerText = content;
         msgDiv.className = isError ? 'alert-msg alert-error' : 'alert-msg alert-success';
-        if (isError) alert(content); // 增加原生弹窗防失效
+        if (isError) alert(content);
     }
 
     async function handleRegister() {
@@ -619,10 +623,8 @@
             if (res.ok) {
                 const dev = await res.json();
                 espCurrentVersion = dev.firmware_version || '1.0.0';
-                // 更新本地和GitHub的版本显示
                 document.getElementById('fwLocalVersionText').innerText = `当前版本: v${espCurrentVersion}`;
                 document.getElementById('fwGithubVersionText').innerText = `当前版本: v${espCurrentVersion}`;
-                // 显示设备状态和系统信息
                 const freeHeapKB = dev.free_heap ? (dev.free_heap / 1024).toFixed(1) : '-';
                 const freeSpaceKB = dev.free_sketch_space ? (dev.free_sketch_space / 1024).toFixed(1) : '-';
                 document.getElementById('espDeviceBox').innerHTML = `
@@ -662,7 +664,6 @@
     }
     async function toggleDevMode() {
         const apiKey = await getOrFetchApiKey();
-        // 先查当前状态
         let isOn = false;
         try {
             const res = await fetch(`${BASE_URL}/api/scale/device/status?device_id=scale_001&_t=${Date.now()}`, { headers: {'X-API-Key': apiKey} });
@@ -689,10 +690,41 @@
             alert("切换分区指令已下发，设备将在5秒内重启并切换分区。");
         }
     }
+    function normalizeMac(raw) {
+        return (raw || '').trim().toUpperCase()
+            .replace(/[\-\uFF0D\u2014\u2013\uFF0E.\s\uFF1A:]/g, ':')
+            .replace(/::+/g, ':')
+            .replace(/^:+|:+$/g, '');
+    }
+    function validMac(mac) { return /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac); }
+    async function wakePc() {
+        const apiKey = await getOrFetchApiKey();
+        let mac = localStorage.getItem('wolMac') || '';
+        if (!mac) {
+            const input = prompt('请输入目标电脑网卡的 MAC 地址\n\n支持任意格式，自动识别：\n  00-E2-69-9A-8C-2A\n  00:E2:69:9A:8C:2A\n  00：E2：69：9A：8C：2A\n\n在电脑上运行 ipconfig /all 查看"物理地址"', 'AA-BB-CC-DD-EE-FF');
+            if (!input) return;
+            mac = normalizeMac(input);
+            if (!validMac(mac)) { alert('MAC 格式不对，示例：00-E2-69-9A-8C-2A'); return; }
+            localStorage.setItem('wolMac', mac);
+        } else {
+            if (!confirm('远程开机目标: ' + mac + '\n\n确认发送 WOL 魔术包？\n\n（点"取消"可修改 MAC）')) {
+                const input = prompt('修改目标 MAC', mac);
+                if (!input) return;
+                mac = normalizeMac(input);
+                if (!validMac(mac)) { alert('MAC 格式不对，示例：00-E2-69-9A-8C-2A'); return; }
+                localStorage.setItem('wolMac', mac);
+            }
+        }
+        await fetch(`${BASE_URL}/api/scale/device/command`, {
+            method: 'POST',
+            headers: {'X-API-Key': apiKey, 'Content-Type': 'application/json'},
+            body: JSON.stringify({device_id: 'scale_001', command: 'wake_pc', params: {mac: mac}})
+        });
+        alert('✅ 开机指令已下发，约 5~10 秒后电脑应开机');
+    }
 
     let globalLatestFwUrl = "";
     let globalFwSource = "";
-    // 版本号比较：返回 1 表示 v1 > v2，-1 表示 v1 < v2，0 表示相等
     function compareVersions(v1, v2) {
         const parts1 = v1.replace(/^v/, '').split('.').map(Number);
         const parts2 = v2.replace(/^v/, '').split('.').map(Number);
@@ -708,17 +740,13 @@
         const url = source ? `${BASE_URL}/api/scale/ota_check?source=${source}` : `${BASE_URL}/api/scale/ota_check`;
         const res = await fetch(url, { headers: {'X-API-Key': await getOrFetchApiKey()} });
         const data = await res.json();
-
-        // 根据 source 选择对应的 UI 元素
         const isLocal = source === 'local' || data.source === 'local';
         const badgeId = isLocal ? 'fwLocalNewBadge' : 'fwGithubNewBadge';
         const versionTextId = isLocal ? 'fwLocalVersionText' : 'fwGithubVersionText';
         const btnId = isLocal ? 'btnFwLocalUpdate' : 'btnFwGithubUpdate';
         const btnText = isLocal ? '🚀 一键升级（本地固件）' : '🚀 一键升级（GitHub）';
-
         const currentVer = espCurrentVersion || '1.0.0';
         const remoteVer = data.latest_version || '0.0.0';
-
         if (data.status === "success" && compareVersions(remoteVer, currentVer) > 0) {
             document.getElementById(badgeId).classList.remove('hidden');
             globalLatestFwUrl = data.download_url;
@@ -730,7 +758,6 @@
                     alert("升级指令已下发，设备将在5秒内重启并升级。");
                 }
             };
-            // 用 confirm 弹窗，有确定和取消两个按钮
             if (confirm(`发现新版本 v${remoteVer}（${isLocal ? '本地固件' : 'GitHub'}）\n当前版本: v${currentVer}\n\n是否立即升级？`)) {
                 document.getElementById(btnId).click();
             }
@@ -763,14 +790,12 @@
         const versionInput = document.getElementById('fwVersionInput');
         const msgDiv = document.getElementById('fwUploadMsg');
         const uploadBtn = document.getElementById('btnFwUpload');
-
         if (!fileInput.files || fileInput.files.length === 0) {
             msgDiv.style.display = 'block';
             msgDiv.style.color = '#dc2626';
             msgDiv.innerText = '❌ 请先选择固件文件 (.bin)';
             return;
         }
-
         const file = fileInput.files[0];
         if (!file.name.endsWith('.bin')) {
             msgDiv.style.display = 'block';
@@ -778,26 +803,22 @@
             msgDiv.innerText = '❌ 仅支持 .bin 格式的固件文件';
             return;
         }
-
         uploadBtn.disabled = true;
         uploadBtn.innerText = '上传中...';
         msgDiv.style.display = 'block';
         msgDiv.style.color = '#6b7280';
         msgDiv.innerText = '正在上传固件...';
-
         try {
             const formData = new FormData();
             formData.append('file', file);
             if (versionInput.value.trim()) {
                 formData.append('version', versionInput.value.trim());
             }
-
             const res = await fetch(`${BASE_URL}/api/scale/firmware/upload`, {
                 method: 'POST',
                 headers: {'X-API-Key': await getOrFetchApiKey()},
                 body: formData
             });
-
             const data = await res.json();
             if (res.ok && data.status === 'success') {
                 msgDiv.style.color = '#16a34a';
