@@ -672,7 +672,7 @@ See the [`LICENSE`](LICENSE) file for details.
 - **Project Address**: https://github.com/fabie250/bambu-filament-managerPro
 - **Companion Firmware**: https://github.com/fabie250/siheng
 - **Issue Feedback**: [GitHub Issues](https://github.com/fabie250/bambu-filament-managerPro/issues)
-
+fabieyousa@163.com
 ---
 
 ## 🙏 Acknowledgments
