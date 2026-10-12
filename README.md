@@ -676,6 +676,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 - **项目地址**：https://github.com/fabie250/bambu-filament-managerPro
 - **配套固件**：https://github.com/fabie250/siheng
 - **问题反馈**：[GitHub Issues](https://github.com/fabie250/bambu-filament-managerPro/issues)
+fabieyousa@163.com
 
 ---
 ## 已知问题
