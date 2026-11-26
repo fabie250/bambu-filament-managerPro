@@ -13,6 +13,10 @@
 ![Docker](https://img.shields.io/badge/docker-supported-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
+> **最新 Windows 客户端：v1.5.3（2026-11-27）**
+>
+> 源码：`客户端/SiGuan1.5.3.py` · 更新报告：[`更新公告_v1.5.3.md`](更新公告_v1.5.3.md)
+
 ---
 ## 全新页面 加入电子秤模块
 <img width="1147" height="810" alt="image" src="https://github.com/user-attachments/assets/b1a58ad3-8cf4-4b1b-bdbf-796a0a3f05fe" />
@@ -241,6 +245,24 @@ BambuFilamentManagerPro-Client.exe
 
 即可启动 Windows 客户端。
 
+### 方式二：当前源码（v1.5.3）
+
+仓库内当前源码为：
+
+```text
+客户端/SiGuan1.5.3.py
+客户端/SiGuan_1.5.3.spec
+```
+
+源码运行时需要把 `bambu_logo.png`、`bambu_logo.ico` 放在同一目录；`MiSans-Regular.ttf` / `MiSans-Bold.ttf` 可选，缺失时会回退到微软雅黑。
+
+构建：
+
+```powershell
+cd 客户端
+py -3.14 -m PyInstaller SiGuan_1.5.3.spec --clean --noconfirm
+```
+
 ### 🔗 首次连接服务端
 
 客户端首次启动后，需要填写服务端地址。
@@ -287,7 +309,7 @@ python server.py
 ### 客户端
 ```bash
 pip install customtkinter requests Pillow
-python client.py
+python "客户端/SiGuan1.5.3.py"
 ```
 
 > 普通用户无需执行以上步骤。
@@ -584,8 +606,11 @@ bambu-filament-managerPro/
 │   ├── requirements.txt        # Python 依赖
 │   └── Dockerfile              # Docker 构建文件
 │
-├── client/
-│   └── client.py               # Windows CTk 客户端
+├── 客户端/
+│   ├── SiGuan1.5.3.py          # Windows CTk 客户端（当前版本）
+│   ├── SiGuan_1.5.3.spec        # PyInstaller 构建配置
+│   ├── bambu_logo.png           # 品牌 Logo
+│   └── bambu_logo.ico           # 程序图标
 │
 ├── web/
 │   └── index.html              # 前端网页（单文件）
@@ -700,3 +725,4 @@ fabieyousa@163.com
 ---
 
 **如果这个项目对你有帮助，欢迎给个 Star ⭐ 支持一下！**
+
