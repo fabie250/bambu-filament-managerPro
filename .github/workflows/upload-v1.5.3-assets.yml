@@ -23,4 +23,4 @@ jobs:
           curl -L --fail --retry 3 -A "$CDN_UA" -o SiGuan_1.5.3.exe "$ONLINE_URL"
           curl -L --fail --retry 3 -A "$CDN_UA" -o SiGuan_Offline_1.5.3.exe "$OFFLINE_URL"
           ls -lh SiGuan_1.5.3.exe SiGuan_Offline_1.5.3.exe
-          gh release upload v1.5.3 SiGuan_1.5.3.exe SiGuan_Offline_1.5.3.exe --clobber
+          gh release upload v1.5.3 SiGuan_1.5.3.exe SiGuan_Offline_1.5.3.exe --clobber --repo fabie250/bambu-filament-managerPro
