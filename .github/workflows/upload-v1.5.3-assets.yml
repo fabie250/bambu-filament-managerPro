@@ -17,9 +17,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ONLINE_URL: https://aka.doubaocdn.com/s/7wUmKBXZNU
           OFFLINE_URL: https://aka.doubaocdn.com/s/wUQKw6oZUN
+          CDN_UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36
         run: |
           set -euo pipefail
-          curl -L --fail --retry 3 -o SiGuan_1.5.3.exe "$ONLINE_URL"
-          curl -L --fail --retry 3 -o SiGuan_Offline_1.5.3.exe "$OFFLINE_URL"
+          curl -L --fail --retry 3 -A "$CDN_UA" -o SiGuan_1.5.3.exe "$ONLINE_URL"
+          curl -L --fail --retry 3 -A "$CDN_UA" -o SiGuan_Offline_1.5.3.exe "$OFFLINE_URL"
           ls -lh SiGuan_1.5.3.exe SiGuan_Offline_1.5.3.exe
           gh release upload v1.5.3 SiGuan_1.5.3.exe SiGuan_Offline_1.5.3.exe --clobber
