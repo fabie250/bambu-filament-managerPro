@@ -13,9 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Update release notes and release body
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update release notes
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -34,7 +32,15 @@ jobs:
           p.write_text(s.replace(old, new), encoding='utf-8')
           PY
           git diff -- 更新公告_v1.5.3.md
-          gh release edit v1.5.3 --body-file 更新公告_v1.5.3.md --repo fabie250/bambu-filament-managerPro
+      - name: Update GitHub Release body
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.5.3
+          body_path: 更新公告_v1.5.3.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit release notes
+        run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add 更新公告_v1.5.3.md
