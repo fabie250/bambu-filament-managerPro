@@ -34,9 +34,10 @@ jobs:
         run: |
           curl -L --fail --retry 3 -o sync.zip "$SYNC_ZIP_URL"
           python -m zipfile -e sync.zip .
+          rm -f sync.zip
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add 客户端/SiGuan1.5.4.py 客户端/SiGuan_1.5.4.spec 更新公告_v1.5.4.md README.md backend/main.py .gitignore
+          git add -A
           if git diff --cached --quiet; then
             echo "source files already up to date"
           else
@@ -65,31 +66,42 @@ jobs:
       - name: Prepare release assets
         shell: bash
         run: |
-          cp 客户端/dist/SiGuan_1.5.4.exe SiGuan_1.5.4.exe
-          cp 客户端/dist/SiGuan_1.5.4.exe SiGuan_Offline_1.5.4.exe
-          sha256sum SiGuan_1.5.4.exe SiGuan_Offline_1.5.4.exe > SHA256SUMS.txt
-          ONLINE_SIZE=$(stat -c%s SiGuan_1.5.4.exe)
-          OFFLINE_SIZE=$(stat -c%s SiGuan_Offline_1.5.4.exe)
-          ONLINE_SHA=$(sha256sum SiGuan_1.5.4.exe | cut -d' ' -f1 | tr '[:lower:]' '[:upper:]')
-          OFFLINE_SHA=$(sha256sum SiGuan_Offline_1.5.4.exe | cut -d' ' -f1 | tr '[:lower:]' '[:upper:]')
+          set -euo pipefail
           python - <<'PY'
           import hashlib
+          import shutil
           from pathlib import Path
+
+          src = Path('客户端') / 'dist' / 'SiGuan_1.5.4.exe'
+          online = Path('SiGuan_1.5.4.exe')
+          offline = Path('SiGuan_Offline_1.5.4.exe')
+          if not src.is_file():
+              raise SystemExit(f'build output not found: {src}')
+
+          shutil.copyfile(src, online)
+          shutil.copyfile(src, offline)
+
           def sha(path):
               h = hashlib.sha256()
-              with open(path, 'rb') as f:
+              with path.open('rb') as f:
                   for chunk in iter(lambda: f.read(1024 * 1024), b''):
                       h.update(chunk)
               return h.hexdigest().upper()
-          online = Path('SiGuan_1.5.4.exe')
-          offline = Path('SiGuan_Offline_1.5.4.exe')
+
+          online_sha = sha(online)
+          offline_sha = sha(offline)
+          Path('SHA256SUMS.txt').write_text(
+              f'{online_sha}  {online.name}\n{offline_sha}  {offline.name}\n',
+              encoding='utf-8',
+          )
+
           body = Path('更新公告_v1.5.4.md').read_text(encoding='utf-8')
           body += (
               "\n\n## 安装包校验\n\n"
               "| 产物 | 大小 | SHA256 |\n"
               "|---|---:|---|\n"
-              f"| `SiGuan_1.5.4.exe` | {online.stat().st_size} B | `{sha(online)}` |\n"
-              f"| `SiGuan_Offline_1.5.4.exe` | {offline.stat().st_size} B | `{sha(offline)}` |\n\n"
+              f"| `SiGuan_1.5.4.exe` | {online.stat().st_size} B | `{online_sha}` |\n"
+              f"| `SiGuan_Offline_1.5.4.exe` | {offline.stat().st_size} B | `{offline_sha}` |\n\n"
               "> 在线版与离线版使用同一份客户端二进制；离线版通过文件名或 `--offline` 参数启用本地 SQLite 模式。\n"
           )
           Path('release-body.md').write_text(body, encoding='utf-8')
