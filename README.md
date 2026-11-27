@@ -322,6 +322,8 @@ python "客户端/SiGuan1.5.4.py"
 
 Linux 用户推荐使用 Docker 部署，也可以使用 Python 源码手动部署。
 
+Linux 服务端源码：`Linux服务端/main.py`，依赖见 `Linux服务端/requirements.txt`。
+
 ### 🐳 Docker 部署（推荐）
 
 本项目已构建 Docker 镜像，托管于 GitHub Container Registry。
