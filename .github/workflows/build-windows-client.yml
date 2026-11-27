@@ -72,11 +72,16 @@ jobs:
           import shutil
           from pathlib import Path
 
-          src = Path('客户端') / 'dist' / 'SiGuan_1.5.4.exe'
+          print('cwd:', Path.cwd())
+          candidates = sorted(Path('.').rglob('SiGuan_1.5.4.exe'), key=lambda p: p.stat().st_size, reverse=True)
+          print('installers found:')
+          for candidate in candidates:
+              print(' ', candidate, candidate.stat().st_size)
+          if not candidates:
+              raise SystemExit('build output not found: SiGuan_1.5.4.exe')
+          src = candidates[0]
           online = Path('SiGuan_1.5.4.exe')
           offline = Path('SiGuan_Offline_1.5.4.exe')
-          if not src.is_file():
-              raise SystemExit(f'build output not found: {src}')
 
           shutil.copyfile(src, online)
           shutil.copyfile(src, offline)
