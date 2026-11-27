@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install customtkinter pillow pyinstaller pyinstxtractor-ng
+          python -m pip install customtkinter pillow keyring pywin32-ctypes pyinstaller pyinstxtractor-ng
 
       - name: Sync v1.5.4 source files
         shell: bash
@@ -121,3 +121,4 @@ jobs:
           draft: false
           prerelease: false
           make_latest: true
+          overwrite_files: true
