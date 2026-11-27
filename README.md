@@ -86,6 +86,8 @@ http://192.168.1.100:8000
 curl -fsSL https://raw.githubusercontent.com/fabie250/bambu-filament-managerPro/main/deploy/install.sh | sudo bash
 ```
 
+> 如果服务器访问 GitHub 受限，脚本会在 git 克隆失败后自动改用 Release 源码包；也可以用 `SIHENG_SOURCE_URL=你的源码包地址` 指定镜像。
+
 默认安装到 `/opt/siheng`，端口 `8000`。如果 8000 已被占用：
 
 ```bash

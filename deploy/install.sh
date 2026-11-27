@@ -55,7 +55,7 @@ rm -rf "$APP_DIR"
 CLONED=0
 if command -v git >/dev/null 2>&1; then
   log "拉取源码：$REPO_OWNER/$REPO_NAME@$BRANCH"
-  if GIT_TERMINAL_PROMPT=0 git clone --depth 1 --branch "$BRANCH" "https://github.com/$REPO_OWNER/$REPO_NAME.git" "$APP_DIR"; then
+  if GIT_TERMINAL_PROMPT=0 git -c http.version=HTTP/1.1 clone --depth 1 --branch "$BRANCH" "https://github.com/$REPO_OWNER/$REPO_NAME.git" "$APP_DIR"; then
     CLONED=1
   else
     log "git clone 失败，尝试源码压缩包..."
@@ -67,7 +67,8 @@ if [ "$CLONED" != "1" ]; then
   command -v tar >/dev/null 2>&1 || die "缺少 tar，且 git clone 失败"
   log "下载源码压缩包..."
   ARCHIVE="$TMP_DIR/repo.tar.gz"
-  curl -fsSL --connect-timeout 15 --max-time 180 "https://github.com/$REPO_OWNER/$REPO_NAME/archive/refs/heads/$BRANCH.tar.gz" -o "$ARCHIVE" || die "源码下载失败，请检查服务器能否访问 GitHub"
+  SOURCE_URL="${SIHENG_SOURCE_URL:-https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/siheng-source.tar.gz}"
+  curl -fsSL --connect-timeout 15 --max-time 180 "$SOURCE_URL" -o "$ARCHIVE" || die "源码下载失败，请检查服务器能否访问 GitHub，或用 SIHENG_SOURCE_URL 指定源码包地址"
   mkdir -p "$TMP_DIR/src"
   tar -xzf "$ARCHIVE" -C "$TMP_DIR/src"
   SRC_DIR="$(find "$TMP_DIR/src" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
