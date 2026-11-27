@@ -13,9 +13,9 @@
 ![Docker](https://img.shields.io/badge/docker-supported-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)
 
-> **最新 Windows 客户端：v1.5.3（2026-11-27）**
+> **最新 Windows 客户端：v1.5.4（2026-11-27）**
 >
-> 源码：`客户端/SiGuan1.5.3.py` · 更新报告：[`更新公告_v1.5.3.md`](更新公告_v1.5.3.md)
+> 源码：`客户端/SiGuan1.5.4.py` · 更新报告：[`更新公告_v1.5.4.md`](更新公告_v1.5.4.md)
 
 ---
 ## 全新页面 加入电子秤模块
@@ -24,9 +24,9 @@
 ## ✨ 功能特性
 
 ### 📦 耗材管理
-- **耗材台账**：品牌、型号、颜色、材质、重量、价格、购买链接全记录
+- **耗材台账**：品牌、型号、颜色、材质、线径（1.75/2.85 mm）、重量、价格、购买链接全记录
 - **NFC 绑定**：PN532 读取耗材盘 NFC UID，一键绑定耗材信息
-- **多仓管理**：支持 AMS 多仓位耗材管理，实时同步仓位状态
+- **多仓管理**：支持 AMS 多仓位与 P3C/H3C 多头机映射；P3C 支持 5 标配 + 2 扩展槽（最多 7 头），H3C 8 号位按 2.85 专用头校验
 - **使用记录**：每次打印自动扣减耗材，记录使用历史
 
 ### 📊 数据洞察
@@ -245,13 +245,13 @@ BambuFilamentManagerPro-Client.exe
 
 即可启动 Windows 客户端。
 
-### 方式二：当前源码（v1.5.3）
+### 方式二：当前源码（v1.5.4）
 
 仓库内当前源码为：
 
 ```text
-客户端/SiGuan1.5.3.py
-客户端/SiGuan_1.5.3.spec
+客户端/SiGuan1.5.4.py
+客户端/SiGuan_1.5.4.spec
 ```
 
 源码运行时需要把 `bambu_logo.png`、`bambu_logo.ico` 放在同一目录；`MiSans-Regular.ttf` / `MiSans-Bold.ttf` 可选，缺失时会回退到微软雅黑。
@@ -260,7 +260,7 @@ BambuFilamentManagerPro-Client.exe
 
 ```powershell
 cd 客户端
-py -3.14 -m PyInstaller SiGuan_1.5.3.spec --clean --noconfirm
+py -3.14 -m PyInstaller SiGuan_1.5.4.spec --clean --noconfirm
 ```
 
 ### 🔗 首次连接服务端
@@ -309,7 +309,7 @@ python server.py
 ### 客户端
 ```bash
 pip install customtkinter requests Pillow
-python "客户端/SiGuan1.5.3.py"
+python "客户端/SiGuan1.5.4.py"
 ```
 
 > 普通用户无需执行以上步骤。
@@ -607,8 +607,8 @@ bambu-filament-managerPro/
 │   └── Dockerfile              # Docker 构建文件
 │
 ├── 客户端/
-│   ├── SiGuan1.5.3.py          # Windows CTk 客户端（当前版本）
-│   ├── SiGuan_1.5.3.spec        # PyInstaller 构建配置
+│   ├── SiGuan1.5.4.py          # Windows CTk 客户端（当前版本）
+│   ├── SiGuan_1.5.4.spec        # PyInstaller 构建配置
 │   ├── bambu_logo.png           # 品牌 Logo
 │   └── bambu_logo.ico           # 程序图标
 │

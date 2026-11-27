@@ -97,6 +97,8 @@ class Filament(Base):
     material = Column(String(50), nullable=False)
     color_name = Column(String(50), nullable=False)
     color_hex = Column(String(10), default="#000000")
+    surface_effect = Column(String(20), default="标准")
+    diameter_mm = Column(Float, default=1.75)
     nfc_uid = Column(String(64), index=True, nullable=True)
     initial_weight_g = Column(Float, default=1000.0)
     current_weight_g = Column(Float, default=1000.0)
@@ -188,6 +190,8 @@ Base.metadata.create_all(bind=engine)
 for sql in [
     "ALTER TABLE filaments ADD COLUMN purchase_url TEXT DEFAULT NULL;",
     "ALTER TABLE filaments ADD COLUMN pending_weight_g FLOAT DEFAULT NULL;",
+    "ALTER TABLE filaments ADD COLUMN surface_effect VARCHAR(20) DEFAULT '标准';",
+    "ALTER TABLE filaments ADD COLUMN diameter_mm FLOAT DEFAULT 1.75;",
     "ALTER TABLE usage_records ADD COLUMN remaining_weight_g FLOAT DEFAULT NULL;",
     "ALTER TABLE usage_records ADD COLUMN printer_id INT DEFAULT NULL;",
     "ALTER TABLE printers ADD COLUMN ams_slots_json TEXT DEFAULT NULL;",
@@ -287,6 +291,8 @@ class FilamentCreate(BaseModel):
     material: str
     color_name: str
     color_hex: str = "#000000"
+    surface_effect: str = "标准"
+    diameter_mm: float = 1.75
     nfc_uid: Optional[str] = None
     initial_weight_g: float = 1000.0
     current_weight_g: float = 1000.0
@@ -314,6 +320,8 @@ class FilamentOut(BaseModel):
     material: str
     color_name: str
     color_hex: str
+    surface_effect: str = "标准"
+    diameter_mm: float = 1.75
     nfc_uid: Optional[str]
     initial_weight_g: float
     current_weight_g: float
@@ -557,6 +565,15 @@ def create_script_api_key(key_data: APIKeyCreate, current_user: User = Depends(g
     db.add(new_api_key); db.commit(); db.refresh(new_api_key)
     return new_api_key
 
+@app.put("/api/ingest/script-filaments/{filament_id}", response_model=FilamentOut, tags=["自动采集接入"])
+def update_filament_for_script(filament_id: int, f: FilamentCreate, user: User = Depends(verify_script_api_key), db: Session = Depends(get_db)):
+    filament = db.query(Filament).filter(Filament.id == filament_id, Filament.user_id == user.id).first()
+    if not filament: raise HTTPException(status_code=404, detail="耗材不存在")
+    for key, value in f.model_dump(exclude_unset=True).items():
+        setattr(filament, key, value)
+    db.commit(); db.refresh(filament)
+    return filament
+
 @app.post("/api/filaments", response_model=FilamentOut, tags=["耗材台账"])
 def create_filament(f: FilamentCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     filament = Filament(**f.model_dump(), user_id=user.id)
@@ -573,7 +590,9 @@ def get_filaments_for_script(user: User = Depends(verify_script_api_key), db: Se
     return [
         {
             "id": f.id, "brand": f.brand, "material": f.material, "color_name": f.color_name,
-            "color_hex": f.color_hex, "initial_weight_g": f.initial_weight_g, "current_weight_g": f.current_weight_g,
+            "color_hex": f.color_hex, "surface_effect": getattr(f, "surface_effect", "标准"),
+            "diameter_mm": getattr(f, "diameter_mm", 1.75),
+            "initial_weight_g": f.initial_weight_g, "current_weight_g": f.current_weight_g,
             "price": f.price, "purchase_url": f.purchase_url
         }
         for f in filaments
