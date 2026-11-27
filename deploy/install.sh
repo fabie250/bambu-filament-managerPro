@@ -71,8 +71,11 @@ if [ "$CLONED" != "1" ]; then
   curl -fsSL --connect-timeout 15 --max-time 180 "$SOURCE_URL" -o "$ARCHIVE" || die "源码下载失败，请检查服务器能否访问 GitHub，或用 SIHENG_SOURCE_URL 指定源码包地址"
   mkdir -p "$TMP_DIR/src"
   tar -xzf "$ARCHIVE" -C "$TMP_DIR/src"
-  SRC_DIR="$(find "$TMP_DIR/src" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
-  [ -n "$SRC_DIR" ] || die "源码解压失败"
+  SRC_DIR="$TMP_DIR/src"
+  if [ ! -f "$SRC_DIR/Dockerfile" ]; then
+    SRC_DIR="$(find "$TMP_DIR/src" -mindepth 1 -maxdepth 1 -type d -name 'bambu-filament-managerPro-*' | head -n 1)"
+  fi
+  [ -n "$SRC_DIR" ] && [ -f "$SRC_DIR/Dockerfile" ] || die "源码解压失败"
   mkdir -p "$APP_DIR"
   cp -a "$SRC_DIR/." "$APP_DIR/"
 fi

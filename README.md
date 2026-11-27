@@ -20,7 +20,7 @@
 | Windows 客户端（在线版） | v1.5.4 | 连接服务端使用 | [SiGuan_1.5.4.exe](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/SiGuan_1.5.4.exe) |
 | Windows 客户端（离线版） | v1.5.4 | 本机离线使用 | [SiGuan_Offline_1.5.4.exe](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/SiGuan_Offline_1.5.4.exe) |
 | Windows 服务端 | v1.2.4 | SQLite，免安装 EXE | [siGuan_server_win.exe](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/siGuan_server_win.exe) |
-| Linux 服务端 | 当前源码 | MySQL，Docker 部署 | [`backend/`](backend/) + [`Dockerfile`](Dockerfile) |
+| Linux 服务端 | 当前源码 | Docker，一条命令安装 | 见下方「Linux 一条命令安装」 |
 
 校验文件：[`SHA256SUMS.txt`](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/SHA256SUMS.txt)
 
