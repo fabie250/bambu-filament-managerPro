@@ -19,7 +19,7 @@
 |---|---|---|---|
 | Windows 客户端（在线版） | v1.5.4 | 连接服务端使用 | [SiGuan_1.5.4.exe](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/SiGuan_1.5.4.exe) |
 | Windows 客户端（离线版） | v1.5.4 | 本机离线使用 | [SiGuan_Offline_1.5.4.exe](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/SiGuan_Offline_1.5.4.exe) |
-| Windows 服务端 | v1.2.4 | SQLite，源码运行 | [`Windows服务端/siGuan_server_1.2.4.py`](Windows服务端/siGuan_server_1.2.4.py) |
+| Windows 服务端 | v1.2.4 | SQLite，免安装 EXE | [siGuan_server_win.exe](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/siGuan_server_win.exe) |
 | Linux 服务端 | 当前源码 | MySQL，Docker 部署 | [`backend/`](backend/) + [`Dockerfile`](Dockerfile) |
 
 校验文件：[`SHA256SUMS.txt`](https://github.com/fabie250/bambu-filament-managerPro/releases/download/v1.5.4/SHA256SUMS.txt)
@@ -32,15 +32,7 @@
 
 ### 1. 启动 Windows 服务端
 
-需要 Python 3.10+（本项目在 3.14 上验证）。在仓库根目录执行：
-
-```powershell
-cd "Windows服务端"
-py -3.14 -m pip install fastapi uvicorn sqlalchemy "python-jose[cryptography]" pydantic python-multipart
-py -3.14 "siGuan_server_1.2.4.py"
-```
-
-启动后按提示选择运行模式：
+下载 `siGuan_server_win.exe`，双击运行。按提示选择运行模式：
 
 - `1`：全网卡监听，局域网内的客户端、手机和 ESP32 都能访问
 - `2`：仅本机访问
@@ -48,6 +40,21 @@ py -3.14 "siGuan_server_1.2.4.py"
 
 默认地址：`http://127.0.0.1:8000`  
 API 文档：`http://127.0.0.1:8000/api/docs`
+
+首次运行会在 EXE 同目录生成 `filament_db.db` 和 `firmware/`，升级前先备份。
+
+<details>
+<summary>用 Python 源码运行服务端</summary>
+
+需要 Python 3.10+（本项目在 3.14 上验证）：
+
+```powershell
+cd "Windows服务端"
+py -3.14 -m pip install fastapi uvicorn sqlalchemy "python-jose[cryptography]" pydantic python-multipart
+py -3.14 "siGuan_server_1.2.4.py"
+```
+
+</details>
 
 ### 2. 注册账号
 
@@ -168,7 +175,7 @@ bambu-filament-managerPro/
 └── README.md
 ```
 
-Windows 服务端的数据默认保存在脚本同目录的 `filament_db.db`，固件在 `firmware/`。升级或迁移前请先复制这两个位置。
+Windows 服务端的数据默认保存在程序同目录的 `filament_db.db`，固件在 `firmware/`。EXE 运行时就是 EXE 所在目录；升级或迁移前请先复制这两个位置。
 
 ---
 
@@ -178,9 +185,8 @@ Windows 服务端的数据默认保存在脚本同目录的 `filament_db.db`，�
 
 使用 SQLite，不需要 MySQL。生产环境建议通过 `JWT_SECRET` 环境变量设置独立的 JWT 密钥。数据库文件：
 
-```text
-Windows服务端/filament_db.db
-```
+- EXE 运行：EXE 同目录下的 `filament_db.db` 和 `firmware/`
+- 源码运行：`Windows服务端/filament_db.db` 和 `Windows服务端/firmware/`
 
 ### Linux 服务端
 
@@ -197,7 +203,9 @@ Windows服务端/filament_db.db
 
 ---
 
-## 构建 Windows 客户端
+## 构建 Windows 程序
+
+### 客户端
 
 ```powershell
 cd "客户端"
@@ -209,11 +217,21 @@ py -3.14 -m PyInstaller SiGuan_1.5.4.spec --clean --noconfirm
 
 MiSans Regular / Bold 已打进 EXE，目标电脑不需要额外安装字体；源码运行时缺字体则回退微软雅黑。
 
+### Windows 服务端 EXE
+
+```powershell
+cd "Windows服务端"
+py -3.14 -m pip install pyinstaller
+py -3.14 -m PyInstaller siGuan_server_1.2.4.spec --clean --noconfirm
+```
+
+生成文件：`Windows服务端/dist/siGuan_server_win.exe`。前端页面已打进 EXE；运行后数据库和固件目录生成在 EXE 同目录。
+
 ---
 
 ## 升级与备份
 
-- **Windows 服务端**：先备份 `filament_db.db` 和 `firmware/`，再替换服务端文件。
+- **Windows 服务端**：先备份程序同目录的 `filament_db.db` 和 `firmware/`，再替换服务端文件或 EXE。
 - **Windows 客户端**：直接覆盖旧 EXE。
 - **Linux Docker**：`docker compose up -d --build` 重建；数据库在 `mysql_data` 卷中。
 - **升级顺序**：先升级服务端，再升级客户端。
@@ -232,7 +250,7 @@ MiSans Regular / Bold 已打进 EXE，目标电脑不需要额外安装字体；
 `DB_HOST` 填 MySQL 容器名（上面的例子是 `db`），不要填 `127.0.0.1`；确认数据库已创建。
 
 **数据在哪里？**  
-Windows 在 `Windows服务端/filament_db.db`；Docker 在 `mysql_data` 卷。定期备份即可。
+Windows EXE 在 EXE 同目录的 `filament_db.db`；源码运行在 `Windows服务端/filament_db.db`；Docker 在 `mysql_data` 卷。定期备份即可。
 
 **需要安装 MiSans 吗？**  
 不需要。EXE 已内置；只有直接运行 Python 源码时才可能需要把字体放在同目录。

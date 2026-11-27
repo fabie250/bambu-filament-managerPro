@@ -784,7 +784,7 @@ def scale_report(data: ScaleReportData, user: User = Depends(verify_script_api_k
 
 # ---------- 固件管理配置 ----------
 APP_VERSION = "1.2.4"
-FIRMWARE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "firmware")
+FIRMWARE_DIR = os.path.join(BASE_DIR, "firmware")
 os.makedirs(FIRMWARE_DIR, exist_ok=True)
 # 本地手动上传的固件存在 local 子目录（和 GitHub 在线更新独立）
 LOCAL_FIRMWARE_DIR = os.path.join(FIRMWARE_DIR, "local")
@@ -1140,3 +1140,4 @@ if __name__ == "__main__":
     print("=" * 72 + "\n")
 
     uvicorn.run(app, host=host_ip, port=port, proxy_headers=True, forwarded_allow_ips="*")
+
