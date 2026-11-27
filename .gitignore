@@ -33,6 +33,7 @@ MANIFEST
 *.spec
 !客户端/*.spec
 !Windows服务端/*.spec
+!deploy/.env.example
 
 # Installer logs
 pip-log.txt

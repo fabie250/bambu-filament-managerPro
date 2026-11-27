@@ -78,58 +78,43 @@ http://192.168.1.100:8000
 
 ---
 
-## Linux 部署（Docker）
+## Linux 一条命令安装（Docker）
 
-准备一台安装 Docker 的 Linux 服务器，克隆仓库后创建 `docker-compose.yml`：
-
-```yaml
-services:
-  db:
-    image: mysql:8.0
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: change-me
-      MYSQL_DATABASE: filament_db
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  filament-api:
-    build: .
-    container_name: filament-api
-    restart: unless-stopped
-    environment:
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: change-me
-      DB_NAME: filament_db
-      SECRET_KEY: change-me-to-a-random-string
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    volumes:
-      - ./firmware:/app/firmware
-
-volumes:
-  mysql_data:
-```
-
-启动：
+一台能访问 GitHub 的 Linux 服务器即可。脚本会自动安装 Docker（已安装则跳过），并生成随机数据库密码和 JWT 密钥。
 
 ```bash
-docker compose up -d --build
-docker compose logs -f filament-api
+curl -fsSL https://raw.githubusercontent.com/fabie250/bambu-filament-managerPro/main/deploy/install.sh | sudo bash
 ```
 
-访问：
+默认安装到 `/opt/siheng`，端口 `8000`。如果 8000 已被占用：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/fabie250/bambu-filament-managerPro/main/deploy/install.sh | sudo env SIHENG_PORT=8080 bash
+```
+
+安装完成后访问：
 
 - 网页端：`http://服务器IP:8000`
 - API 文档：`http://服务器IP:8000/api/docs`
 
-> 必须修改 `MYSQL_ROOT_PASSWORD`、`DB_PASSWORD` 和 `SECRET_KEY`。  
-> 1Panel 用户可把上面的 YAML 粘贴到「容器 → 编排 → 创建编排」中启动。
+脚本会把配置写到 `/opt/siheng/app/deploy/.env`（权限 600），MySQL 数据放在 Docker volume `siheng_mysql_data`，固件放在 `/opt/siheng/data/firmware`。**更新时重跑同一条命令即可，配置和数据会保留。**
+
+> 云服务器需要在安全组/防火墙放行网页端口；MySQL 没有映射到公网，不需要额外开放 3306。
+
+<details>
+<summary>手动 Docker Compose / 1Panel 编排</summary>
+
+仓库已带 `deploy/docker-compose.yml`，需要自己管理配置时执行：
+
+```bash
+cd /opt/siheng/app
+cp deploy/.env.example deploy/.env   # 首次使用，修改数据库密码和 JWT 密钥
+docker compose -p siheng -f deploy/docker-compose.yml up -d --build
+```
+
+1Panel 用户可以在「容器 → 编排 → 创建编排」中粘贴 `deploy/docker-compose.yml`，再把 `.env` 中的变量填进环境变量。
+
+</details>
 
 <details>
 <summary>不用 Docker：Linux 源码运行</summary>
@@ -139,7 +124,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
 
-# 先准备 MySQL 8.0 和数据库 filament_db，并设置 DB_* 环境变量
+# 先准备 MySQL 8.0 和数据库 filament_db
+export DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=root DB_PASSWORD=你的密码 DB_NAME=filament_db
+export JWT_SECRET=随机长字符串
 cd backend
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
@@ -147,7 +134,6 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 </details>
 
 ---
-
 ## 功能
 
 - **耗材台账**：品牌、材料、颜色、表面效果、线径（1.75 / 2.85 mm）、重量、价格、购买链接、备注。
@@ -171,6 +157,7 @@ bambu-filament-managerPro/
 ├── Linux服务端/            # Linux 服务端单文件副本，手动部署参考
 ├── frontend/               # 网页端（单文件 index.html）
 ├── Dockerfile              # Linux 服务端镜像
+├── deploy/                 # Linux 一条命令安装（Compose + install.sh）
 ├── 更新公告_v1.5.4.md      # 当前客户端更新说明
 └── README.md
 ```
